@@ -1,334 +1,331 @@
+import React from "react";
 import Link from "next/link";
+import {
+  FileSignature,
+  Eye,
+  MousePointerClick,
+  History,
+  ArrowRight,
+  CheckCircle2,
+  Shield,
+  Scale,
+  Zap,
+  BookOpen,
+  FileText,
+  Link2,
+} from "lucide-react";
+import NavigationBar from "@/components/navigation-bar";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-export default function Home() {
+export default async function LandingPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Better-Auth
-            <span className="block text-indigo-600">Authentication Demo</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Experience the power of better-auth with this comprehensive demo
-            showcasing social providers, email/password authentication, and
-            protected routes.
-          </p>
+    <div className="min-h-screen bg-white font-sans text-neutral-950 antialiased selection:bg-neutral-900 selection:text-white">
+      {/* --- NAVBAR --- */}
+      <NavigationBar session={session} />
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/auth"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-            >
-              Try Authentication
+      <main className="flex-1">
+        {/* --- HERO SECTION --- */}
+        <section className="relative pt-20 pb-32 md:pt-32 md:pb-48 overflow-hidden">
+          <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
+            <div className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm font-medium text-neutral-600 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <span className="flex h-2 w-2 rounded-full bg-neutral-950 mr-2"></span>
+              Enterprise Ready (Next.js 15)
+            </div>
+
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter text-neutral-950 mb-6 max-w-4xl mx-auto">
+              Secure & Structured <br className="hidden md:block" />
+              <span className="text-neutral-500">Document Workflows.</span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-neutral-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+              A digital signature platform combining document integrity,
+              real-time PDF previews, and drag-and-drop simplicity for
+              professional teams and official agencies.
+            </p>
+
+            <Link href="/dashboard">
+              <button className="h-12 px-8 rounded-md bg-neutral-950 text-white font-medium hover:bg-neutral-900 transition-all shadow-lg shadow-neutral-500/20">
+                Create Document
+              </button>
             </Link>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-            >
-              View Dashboard
-            </Link>
           </div>
-        </div>
 
-        {/* Features Grid */}
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-              <svg
-                className="w-6 h-6 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+          {/* Geometric pattern background */}
+          <div className="absolute inset-0 -z-0 overflow-hidden pointer-events-none">
+            {/* Large circle */}
+            <div className="absolute top-10 right-1/4 w-96 h-96 rounded-full bg-neutral-200/40 blur-3xl"></div>
+            {/* Medium circle */}
+            <div className="absolute bottom-20 left-1/4 w-72 h-72 rounded-full bg-neutral-300/30 blur-3xl"></div>
+            {/* Small circle */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-neutral-100/50 blur-2xl"></div>
+            {/* Geometric shapes */}
+            <div className="absolute top-20 left-10 w-32 h-32 bg-neutral-200/20 rotate-45 blur-xl"></div>
+            <div className="absolute bottom-32 right-20 w-40 h-40 bg-neutral-300/20 rotate-12 blur-xl"></div>
+            <div className="absolute top-1/3 right-1/3 w-24 h-24 bg-neutral-100/30 rotate-45 blur-lg"></div>
+            {/* Dot pattern overlay */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.2)_1px,transparent_0)] [background-size:32px_32px]"></div>
+          </div>
+        </section>
+
+        {/* --- FEATURES GRID --- */}
+        <section
+          id="features"
+          className="py-24 bg-neutral-50/50 border-y border-neutral-100"
+        >
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="grid md:grid-cols-3 gap-12">
+              {/* Feature 1 */}
+              <div className="group space-y-4">
+                <div className="h-12 w-12 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center group-hover:bg-white group-hover:shadow-md transition-all duration-300">
+                  <Eye className="h-6 w-6 text-neutral-700" />
+                </div>
+                <h3 className="text-xl font-bold text-neutral-950">
+                  Live PDF Preview
+                </h3>
+                <p className="text-neutral-600 leading-relaxed">
+                  See documents exactly as the final output. No guessing
+                  signature positions; the view updates in real-time using
+                  PDF.js.
+                </p>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="group space-y-4">
+                <div className="h-12 w-12 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center group-hover:bg-white group-hover:shadow-md transition-all duration-300">
+                  <MousePointerClick className="h-6 w-6 text-neutral-700" />
+                </div>
+                <h3 className="text-xl font-bold text-neutral-950">
+                  Drag & Drop Signing
+                </h3>
+                <p className="text-neutral-600 leading-relaxed">
+                  Place your digital signature with precision. Simply drag and
+                  drop elements to the desired position without technical
+                  complexity.
+                </p>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="group space-y-4">
+                <div className="h-12 w-12 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center group-hover:bg-white group-hover:shadow-md transition-all duration-300">
+                  <History className="h-6 w-6 text-neutral-700" />
+                </div>
+                <h3 className="text-xl font-bold text-neutral-950">
+                  Complete Audit Trail
+                </h3>
+                <p className="text-neutral-600 leading-relaxed">
+                  Every step is tracked. From draft creation and review to final
+                  signing, ensuring integrity for audit requirements.
+                </p>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Social Authentication
-            </h3>
-            <p className="text-gray-600">
-              Seamlessly authenticate users with Google, GitHub, and other
-              popular social providers. No need to manage passwords or worry
-              about security.
-            </p>
           </div>
+        </section>
 
-          <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
-              <svg
-                className="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
+        {/* --- WORKFLOW SECTION --- */}
+        <section id="workflow" className="py-24 bg-white">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="flex flex-col md:flex-row gap-12 items-center">
+              <div className="flex-1 space-y-8">
+                <h2 className="text-3xl md:text-4xl font-bold text-neutral-950 tracking-tight">
+                  Designed for <br />
+                  <span className="text-neutral-500">
+                    Structured Processes.
+                  </span>
+                </h2>
+                <p className="text-lg text-neutral-600">
+                  Unlike generic e-sign tools, this application guides you
+                  through clear stages to reduce errors and manual
+                  back-and-forth revisions.
+                </p>
+
+                <ul className="space-y-4">
+                  {[
+                    "Preparation & PDF Upload",
+                    "Signature Positioning (Drafting)",
+                    "Tiered Review & Approval",
+                    "Finalization & Secure Storage",
+                  ].map((item, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-3 text-neutral-800 font-medium"
+                    >
+                      <CheckCircle2 className="h-5 w-5 text-neutral-950" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Visual Representation of Workflow (Mockup) */}
+              <div className="flex-1 w-full relative">
+                <div className="relative aspect-video rounded-xl bg-neutral-100 border border-neutral-200 p-4 shadow-xl overflow-hidden">
+                  {/* Mock UI Elements */}
+                  <div className="absolute top-4 left-4 right-4 h-8 bg-white rounded border border-neutral-200 flex items-center px-3 gap-2">
+                    <div className="h-2 w-2 rounded-full bg-red-400"></div>
+                    <div className="h-2 w-2 rounded-full bg-amber-400"></div>
+                    <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                  </div>
+                  <div className="absolute top-16 left-4 right-4 bottom-4 bg-white border border-neutral-200 rounded shadow-sm flex">
+                    <div className="w-1/3 border-r border-neutral-100 p-4 space-y-2">
+                      <div className="h-2 w-1/2 bg-neutral-200 rounded"></div>
+                      <div className="h-2 w-3/4 bg-neutral-100 rounded"></div>
+                      <div className="h-2 w-2/3 bg-neutral-100 rounded"></div>
+                      <div className="mt-4 h-8 w-full bg-neutral-950 rounded"></div>
+                    </div>
+                    <div className="w-2/3 p-4 flex items-center justify-center bg-neutral-50/50">
+                      <div className="h-32 w-24 bg-white shadow border border-neutral-200 flex items-center justify-center">
+                        <span className="text-[10px] text-neutral-300">
+                          PDF Preview
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Floating Badge */}
+                  <div className="absolute -bottom-2 -right-2 bg-neutral-950 text-white text-xs px-4 py-2 rounded-lg shadow-lg">
+                    Status: Signed & Verified
+                  </div>
+                </div>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Email & Password
-            </h3>
-            <p className="text-gray-600">
-              Traditional email and password authentication with secure password
-              hashing, email verification, and password reset functionality.
-            </p>
           </div>
+        </section>
 
-          <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-xl transition-shadow">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
-              <svg
-                className="w-6 h-6 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
+        {/* --- WHY CHOOSE US / BENEFITS --- */}
+        <section className="py-20 bg-neutral-950 text-white">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Why Choose DigiSign?
+              </h2>
+              <p className="text-neutral-400 max-w-2xl mx-auto">
+                Experience the difference with a platform designed for security,
+                speed, and simplicity.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Secure & Protected
-            </h3>
-            <p className="text-gray-600">
-              Built-in security features including JWT tokens, session
-              management, and protected routes that only authenticated users can
-              access.
-            </p>
-          </div>
-        </div>
 
-        {/* Demo Section */}
-        <div className="mt-20 bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Try It Out
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Benefit 1 */}
+              <div className="group p-6 rounded-xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900 transition-all duration-300">
+                <div className="h-12 w-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center mb-4 group-hover:bg-neutral-800 group-hover:border-neutral-600 transition-all">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Bank-Grade Security</h3>
+                <p className="text-neutral-400 text-sm leading-relaxed">
+                  End-to-end encryption and secure storage protocols protect
+                  your sensitive documents at every step.
+                </p>
+              </div>
+
+              {/* Benefit 2 */}
+              <div className="group p-6 rounded-xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900 transition-all duration-300">
+                <div className="h-12 w-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center mb-4 group-hover:bg-neutral-800 group-hover:border-neutral-600 transition-all">
+                  <Scale className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Legal Compliance</h3>
+                <p className="text-neutral-400 text-sm leading-relaxed">
+                  Fully compliant with eIDAS, ESIGN, and UETA standards for
+                  legally binding electronic signatures.
+                </p>
+              </div>
+
+              {/* Benefit 3 */}
+              <div className="group p-6 rounded-xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900 transition-all duration-300">
+                <div className="h-12 w-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center mb-4 group-hover:bg-neutral-800 group-hover:border-neutral-600 transition-all">
+                  <Zap className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Lightning Fast</h3>
+                <p className="text-neutral-400 text-sm leading-relaxed">
+                  Process documents in seconds, not hours. Streamlined workflows
+                  save time for your entire team.
+                </p>
+              </div>
+
+              {/* Benefit 4 */}
+              <div className="group p-6 rounded-xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900 transition-all duration-300">
+                <div className="h-12 w-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center mb-4 group-hover:bg-neutral-800 group-hover:border-neutral-600 transition-all">
+                  <BookOpen className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Zero Learning Curve</h3>
+                <p className="text-neutral-400 text-sm leading-relaxed">
+                  Intuitive interface designed for everyone. No training
+                  required—start signing documents immediately.
+                </p>
+              </div>
+
+              {/* Benefit 5 */}
+              <div className="group p-6 rounded-xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900 transition-all duration-300">
+                <div className="h-12 w-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center mb-4 group-hover:bg-neutral-800 group-hover:border-neutral-600 transition-all">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Audit Ready</h3>
+                <p className="text-neutral-400 text-sm leading-relaxed">
+                  Complete document history and compliance reports make audits
+                  simple and stress-free.
+                </p>
+              </div>
+
+              {/* Benefit 6 */}
+              <div className="group p-6 rounded-xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900 transition-all duration-300">
+                <div className="h-12 w-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center mb-4 group-hover:bg-neutral-800 group-hover:border-neutral-600 transition-all">
+                  <Link2 className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Seamless Integration</h3>
+                <p className="text-neutral-400 text-sm leading-relaxed">
+                  Works with your existing tools and workflows. Easy API access
+                  for custom integrations.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* --- CTA SECTION --- */}
+        <section className="py-24 bg-white border-t border-neutral-200">
+          <div className="container mx-auto px-4 md:px-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-950 mb-6 tracking-tight">
+              Ready to digitize your documents?
             </h2>
-            <p className="text-lg text-gray-600">
-              Experience the authentication flow with our interactive demo
+            <p className="text-lg text-neutral-600 mb-8 max-w-xl mx-auto">
+              Improve internal team efficiency and document management with a
+              secure and tested system.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Authentication Flow
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-indigo-600">
-                      1
-                    </span>
-                  </div>
-                  <span className="text-gray-700">
-                    Visit the authentication page
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-indigo-600">
-                      2
-                    </span>
-                  </div>
-                  <span className="text-gray-700">
-                    Choose your preferred sign-in method
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-indigo-600">
-                      3
-                    </span>
-                  </div>
-                  <span className="text-gray-700">
-                    Access the protected dashboard
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Available Features
-              </h3>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span className="text-gray-700">
-                    Google OAuth integration
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span className="text-gray-700">
-                    GitHub OAuth integration
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span className="text-gray-700">
-                    Email/password authentication
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span className="text-gray-700">Protected routes</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span className="text-gray-700">User session management</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 text-center">
             <Link
-              href="/auth"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              href="/signup"
+              className="inline-flex h-12 items-center justify-center rounded-md bg-neutral-950 px-8 text-sm font-medium text-neutral-50 shadow hover:bg-neutral-900 transition-colors"
             >
-              Start Demo
+              Get Started <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </div>
-        </div>
-
-        {/* Info Section */}
-        <div className="mt-20 text-center">
-          <div className="bg-blue-50 rounded-2xl p-8 border border-blue-200">
-            <h3 className="text-2xl font-bold text-blue-900 mb-4">
-              About Better-Auth
-            </h3>
-            <p className="text-blue-800 text-lg mb-6">
-              Better-Auth is a modern, flexible authentication library for
-              Next.js that provides a seamless developer experience with
-              built-in security and extensive customization options.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="https://better-auth.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-lg text-blue-700 bg-white hover:bg-blue-50 transition-colors"
-              >
-                Learn More
-              </a>
-              <a
-                href="https://github.com/next-authjs/next-auth"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-lg text-blue-700 bg-white hover:bg-blue-50 transition-colors"
-              >
-                View on GitHub
-              </a>
-            </div>
-          </div>
-        </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold mb-4">Better-Auth Demo</h3>
-            <p className="text-gray-400 mb-6">
-              A demonstration of modern authentication patterns and best
-              practices
-            </p>
-            <div className="flex justify-center space-x-6">
-              <Link
-                href="/"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                Home
-              </Link>
-              <Link
-                href="/auth"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                Authentication
-              </Link>
-              <Link
-                href="/dashboard"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                Dashboard
-              </Link>
-            </div>
+      {/* --- FOOTER --- */}
+      <footer className="border-t border-neutral-200 bg-neutral-50 py-12">
+        <div className="container mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2 font-bold text-lg text-neutral-900">
+            <FileSignature className="h-5 w-5" />
+            <span>DigiSign.</span>
+          </div>
+          <p className="text-sm text-neutral-500">
+            © {new Date().getFullYear()} Digital Signature App. All rights
+            reserved.
+          </p>
+          <div className="flex gap-6 text-sm text-neutral-500">
+            <Link href="#" className="hover:text-neutral-950">
+              Privacy
+            </Link>
+            <Link href="#" className="hover:text-neutral-950">
+              Terms
+            </Link>
+            <Link href="#" className="hover:text-neutral-950">
+              Contact
+            </Link>
           </div>
         </div>
       </footer>

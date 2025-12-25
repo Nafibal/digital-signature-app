@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 
 type Session = typeof auth.$Infer.Session;
 
-export default function DashboardClientPage({ session }: { session: Session }) {
+export default async function DashboardClientPage({
+  session,
+}: {
+  session: Session;
+}) {
   const router = useRouter();
   const user = session.user;
 
