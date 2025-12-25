@@ -122,9 +122,6 @@ CREATE INDEX "sessions_userId_idx" ON "sessions"("userId");
 CREATE INDEX "accounts_userId_idx" ON "accounts"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "accounts_providerId_key" ON "accounts"("providerId");
-
--- CreateIndex
 CREATE INDEX "verifications_identifier_idx" ON "verifications"("identifier");
 
 -- CreateIndex
