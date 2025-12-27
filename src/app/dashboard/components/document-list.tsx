@@ -4,14 +4,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DocumentCard from "./document-card";
 import EmptyState from "./empty-state";
-
-interface Document {
-  id: string;
-  title: string;
-  status: "draft" | "signed";
-  currentStep: number;
-  createdAt: string;
-}
+import { Document } from "@/lib/api/documents";
 
 interface DocumentListProps {
   documents?: Document[];
@@ -20,59 +13,13 @@ interface DocumentListProps {
   onEditDocument?: (id: string) => void;
 }
 
-// Static dummy data
-const dummyDocuments: Document[] = [
-  {
-    id: "1",
-    title: "Contract Agreement",
-    status: "draft",
-    currentStep: 3,
-    createdAt: "2025-01-15T10:30:00Z",
-  },
-  {
-    id: "2",
-    title: "NDA Document",
-    status: "signed",
-    currentStep: 4,
-    createdAt: "2025-01-10T14:20:00Z",
-  },
-  {
-    id: "3",
-    title: "Invoice #2025-001",
-    status: "draft",
-    currentStep: 2,
-    createdAt: "2025-01-14T09:15:00Z",
-  },
-  {
-    id: "4",
-    title: "Employee Handbook",
-    status: "draft",
-    currentStep: 1,
-    createdAt: "2025-01-12T16:45:00Z",
-  },
-  {
-    id: "5",
-    title: "Service Agreement",
-    status: "signed",
-    currentStep: 4,
-    createdAt: "2025-01-08T11:30:00Z",
-  },
-  {
-    id: "6",
-    title: "Terms and Conditions",
-    status: "draft",
-    currentStep: 2,
-    createdAt: "2025-01-13T13:00:00Z",
-  },
-];
-
 export default function DocumentList({
-  documents = dummyDocuments,
+  documents = [],
   onCreateDocument,
   onViewDocument,
   onEditDocument,
 }: DocumentListProps) {
-  const hasDocuments = documents.length > 0;
+  const hasDocuments = documents && documents.length > 0;
 
   return (
     <div className="space-y-6">

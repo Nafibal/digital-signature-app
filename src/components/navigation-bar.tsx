@@ -36,12 +36,6 @@ const NavigationBar = ({ session }: { session: Session | null }) => {
           >
             How It Works
           </Link>
-          <Link
-            href="#security"
-            className="hover:text-neutral-950 transition-colors"
-          >
-            Security
-          </Link>
         </nav>
         <div className="flex items-center gap-4">
           {session && (

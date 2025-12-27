@@ -64,8 +64,13 @@ CREATE TABLE "documents" (
     "id" UUID NOT NULL,
     "owner_id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "description" TEXT,
+    "document_type" TEXT,
     "current_step" INTEGER NOT NULL,
     "status" "DocumentStatus" NOT NULL,
+    "source_type" TEXT,
+    "pdf_path" TEXT,
+    "current_content_id" UUID,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -77,6 +82,9 @@ CREATE TABLE "document_contents" (
     "id" UUID NOT NULL,
     "document_id" UUID NOT NULL,
     "content_json" JSONB NOT NULL,
+    "html_content" TEXT,
+    "preview_pdf_path" TEXT,
+    "version" INTEGER NOT NULL DEFAULT 1,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -89,6 +97,7 @@ CREATE TABLE "document_drafts" (
     "document_id" UUID NOT NULL,
     "pdf_path" TEXT NOT NULL,
     "version" INTEGER NOT NULL,
+    "template_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "document_drafts_pkey" PRIMARY KEY ("id")
@@ -104,6 +113,9 @@ CREATE TABLE "signatures" (
     "pos_y" DOUBLE PRECISION NOT NULL,
     "width" DOUBLE PRECISION NOT NULL,
     "height" DOUBLE PRECISION NOT NULL,
+    "signer_name" TEXT NOT NULL,
+    "signer_position" TEXT,
+    "organization" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "signatures_pkey" PRIMARY KEY ("id")
@@ -125,10 +137,16 @@ CREATE INDEX "accounts_userId_idx" ON "accounts"("userId");
 CREATE INDEX "verifications_identifier_idx" ON "verifications"("identifier");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "documents_current_content_id_key" ON "documents"("current_content_id");
+
+-- CreateIndex
 CREATE INDEX "documents_owner_id_idx" ON "documents"("owner_id");
 
 -- CreateIndex
 CREATE INDEX "document_contents_document_id_idx" ON "document_contents"("document_id");
+
+-- CreateIndex
+CREATE INDEX "document_contents_document_id_version_idx" ON "document_contents"("document_id", "version");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "document_drafts_document_id_version_key" ON "document_drafts"("document_id", "version");
@@ -144,6 +162,9 @@ ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "documents" ADD CONSTRAINT "documents_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "documents" ADD CONSTRAINT "documents_current_content_id_fkey" FOREIGN KEY ("current_content_id") REFERENCES "document_contents"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "document_contents" ADD CONSTRAINT "document_contents_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "documents"("id") ON DELETE CASCADE ON UPDATE CASCADE;

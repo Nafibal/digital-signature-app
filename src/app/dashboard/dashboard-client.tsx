@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { User, LogOut, FileSignature } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DocumentList from "./components/document-list";
+import { useGetAllDocuments } from "@/lib/hooks/use-get-all-documents";
 
 type Session = typeof auth.$Infer.Session;
 
@@ -13,24 +14,31 @@ export default function DashboardClientPage({ session }: { session: Session }) {
   const router = useRouter();
   const user = session.user;
 
+  const {
+    data: documents,
+    isLoading,
+    error,
+  } = useGetAllDocuments({
+    onError: (error) => {
+      console.error("Failed to load documents:", error);
+    },
+  });
+
   const handleSignOut = async () => {
     await signOut();
     router.push("/login");
   };
 
   const handleCreateDocument = () => {
-    // TODO: Navigate to document creation page
-    console.log("Create new document");
+    router.push("/document");
   };
 
   const handleViewDocument = (id: string) => {
-    // TODO: Navigate to document view page
-    console.log("View document:", id);
+    router.push(`/document/${id}`);
   };
 
   const handleEditDocument = (id: string) => {
-    // TODO: Navigate to document edit page
-    console.log("Edit document:", id);
+    router.push(`/document/${id}`);
   };
 
   return (
@@ -71,11 +79,22 @@ export default function DashboardClientPage({ session }: { session: Session }) {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 md:px-6 md:py-12">
-        <DocumentList
-          onCreateDocument={handleCreateDocument}
-          onViewDocument={handleViewDocument}
-          onEditDocument={handleEditDocument}
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-neutral-600">Loading documents...</div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-red-600">Failed to load documents</div>
+          </div>
+        ) : (
+          <DocumentList
+            documents={documents}
+            onCreateDocument={handleCreateDocument}
+            onViewDocument={handleViewDocument}
+            onEditDocument={handleEditDocument}
+          />
+        )}
       </main>
     </div>
   );

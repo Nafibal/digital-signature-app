@@ -1,9 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { DocumentStatus } from "@/lib/api/documents";
 
 interface StatusBadgeProps {
-  status: "draft" | "signed";
+  status: DocumentStatus;
 }
 
 export default function DocumentStatusBadge({ status }: StatusBadgeProps) {

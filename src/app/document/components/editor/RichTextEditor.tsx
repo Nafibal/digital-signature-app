@@ -1,0 +1,121 @@
+"use client";
+
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import EditorToolbar from "./EditorToolbar";
+import { useEffect } from "react";
+import { TiptapJson, TiptapNode } from "@/lib/types/document";
+
+interface RichTextEditorProps {
+  onUpdate: (content: { html: string; json: TiptapJson }) => void;
+  initialContent?: TiptapJson | string;
+}
+
+// Helper function to sanitize content and remove empty text nodes
+const sanitizeContent = (content: TiptapJson | string): TiptapJson | string => {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (!content || typeof content !== "object") {
+    return "";
+  }
+
+  const sanitizeNode = (node: TiptapNode): TiptapNode | null => {
+    if (!node) return null;
+
+    // If it's a text node and empty, return null
+    if (node.type === "text") {
+      if (!node.text || node.text.trim() === "") {
+        return null;
+      }
+      return node;
+    }
+
+    // If it has content, recursively sanitize
+    if (node.content && Array.isArray(node.content)) {
+      const sanitizedContent = node.content
+        .map(sanitizeNode)
+        .filter((child): child is TiptapNode => child !== null);
+
+      // If after sanitization, content is empty and it's not a leaf node, return null
+      if (sanitizedContent.length === 0) {
+        return null;
+      }
+
+      return { ...node, content: sanitizedContent };
+    }
+
+    return node;
+  };
+
+  const sanitized = sanitizeNode(content);
+  return (sanitized as TiptapJson) || "";
+};
+
+const RichTextEditor = ({ onUpdate, initialContent }: RichTextEditorProps) => {
+  const sanitizedContent = sanitizeContent(initialContent || "");
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+        // Disable features we don't want
+        code: false, // Disable inline code
+        codeBlock: false, // Disable code blocks
+        // Disable underline from StarterKit to avoid duplicate extension error
+        underline: false,
+      }),
+      Underline,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+    ],
+    content: sanitizedContent,
+    immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        class:
+          "tiptap-editor prose prose-sm max-w-none focus:outline-none min-h-75",
+      },
+    },
+    onUpdate: ({ editor }) => {
+      onUpdate({
+        html: editor.getHTML(),
+        json: editor.getJSON(),
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (editor) {
+      onUpdate({
+        html: editor.getHTML(),
+        json: editor.getJSON(),
+      });
+    }
+  }, [editor]);
+
+  return (
+    <div className="flex flex-col h-full bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden">
+      <EditorToolbar editor={editor} />
+      <div className="flex-1 overflow-auto p-6">
+        <EditorContent editor={editor} className="h-full" />
+      </div>
+    </div>
+  );
+};
+
+export default RichTextEditor;

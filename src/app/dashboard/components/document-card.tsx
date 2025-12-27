@@ -10,15 +10,10 @@ import {
 } from "@/components/ui/card";
 import DocumentStatusBadge from "./document-status-badge";
 import WorkflowSteps from "./workflow-steps";
+import { Document } from "@/lib/api/documents";
 
 interface DocumentCardProps {
-  document: {
-    id: string;
-    title: string;
-    status: "draft" | "signed";
-    currentStep: number;
-    createdAt: string;
-  };
+  document: Document;
   onView?: (id: string) => void;
   onEdit?: (id: string) => void;
 }

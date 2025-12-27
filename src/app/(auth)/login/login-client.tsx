@@ -1,28 +1,26 @@
 "use client";
 import { FileSignature, GalleryVerticalEnd } from "lucide-react";
 
-import { LoginForm } from "@/components/login-form";
+import { LoginForm, LoginFormData } from "@/components/login-form";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { useSearchParams } from "next/navigation";
 import { signIn, signUp } from "@/lib/actions/auth-actions";
+import Image from "next/image";
 
 export default function LoginClientPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   // const router = useRouter();
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEmailAuth = async (data: LoginFormData) => {
     setIsLoading(true);
     setError("");
 
     try {
-      const result = await signIn(email, password);
+      const result = await signIn(data.email, data.password);
       if (!result.user) {
         setError("Invalid email or password");
       }
@@ -39,18 +37,23 @@ export default function LoginClientPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-950 text-white">
-            <FileSignature className="h-5 w-5" />
-          </div>
-          <span>DigiSign.</span>
+        <div className="flex">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-xl tracking-tight"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-950 text-white">
+              <FileSignature className="h-5 w-5" />
+            </div>
+            <span>DigiSign.</span>
+          </Link>
         </div>
 
         {/* Error Display */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg
                   className="h-5 w-5 text-red-400"
                   viewBox="0 0 20 20"
@@ -72,21 +75,16 @@ export default function LoginClientPage() {
 
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <LoginForm
-              onSubmit={handleEmailAuth}
-              email={email}
-              handleChangeEmail={setEmail}
-              password={password}
-              handleChangePassword={setPassword}
-            />
+            <LoginForm onSubmit={handleEmailAuth} />
           </div>
         </div>
       </div>
       <div className="bg-muted relative hidden lg:block">
-        <img
+        <Image
           src="/assets/login.jpg"
           alt="Image"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          fill
         />
       </div>
     </div>

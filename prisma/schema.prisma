@@ -90,19 +90,30 @@ model Verification {
 ///////////////////////////////////////////////////////////
 
 model Document {
-  id           String             @id @default(uuid()) @db.Uuid
-  ownerId      String             @map("owner_id")
-  title        String
-  currentStep  Int                @map("current_step")
-  status       DocumentStatus
-  createdAt    DateTime           @default(now()) @map("created_at")
-  updatedAt    DateTime           @updatedAt @map("updated_at")
+  id            String             @id @default(uuid()) @db.Uuid
+  ownerId       String             @map("owner_id")
+  title         String
+  description   String?            @map("description")
+  documentType  String?            @map("document_type")
+  currentStep   Int                @map("current_step")
+  status        DocumentStatus
+  
+  // Document source tracking
+  sourceType    String?            @map("source_type") // 'upload' | 'blank'
+  pdfPath       String?            @map("pdf_path") // Supabase Storage path
+  
+  // Content tracking for create document scenario
+  currentContentId String?         @unique @map("current_content_id") @db.Uuid // Reference to current content
+  
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
 
   // Relations
-  owner        User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  contents     DocumentContent[]
-  drafts       DocumentDraft[]
-  signatures   Signature[]
+  owner         User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  contents      DocumentContent[]
+  drafts        DocumentDraft[]
+  signatures    Signature[]
+  currentContent DocumentContent?  @relation("DocumentCurrentContent", fields: [currentContentId], references: [id])
 
   @@index([ownerId])
   @@map("documents")
@@ -111,14 +122,26 @@ model Document {
 model DocumentContent {
   id          String   @id @default(uuid()) @db.Uuid
   documentId  String   @db.Uuid @map("document_id")
-  contentJson Json     @map("content_json")
+
+  // Content data
+  contentJson Json     @map("content_json") // Tiptap content
+  htmlContent String?  @map("html_content") // Raw HTML content
+
+  // Preview tracking
+  previewPdfPath String? @map("preview_pdf_path") // Generated preview PDF path
+
+  // Version tracking
+  version     Int      @default(1)
+
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  currentForDocument Document? @relation("DocumentCurrentContent")
 
   @@index([documentId])
+  @@index([documentId, version])
   @@map("document_contents")
 }
 
@@ -131,6 +154,7 @@ model DocumentDraft {
   documentId  String   @db.Uuid @map("document_id")
   pdfPath     String   @map("pdf_path")
   version     Int
+  templateId  String?  @map("template_id")
   createdAt   DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -145,18 +169,21 @@ model DocumentDraft {
 ///////////////////////////////////////////////////////////
 
 model Signature {
-  id          String   @id @default(uuid()) @db.Uuid
-  documentId  String   @db.Uuid @map("document_id")
-  imagePath   String   @map("image_path")
-  pageNumber  Int      @map("page_number")
-  posX        Float    @map("pos_x")
-  posY        Float    @map("pos_y")
-  width       Float
-  height      Float
-  createdAt   DateTime @default(now()) @map("created_at")
+  id              String   @id @default(uuid()) @db.Uuid
+  documentId      String   @db.Uuid @map("document_id")
+  imagePath       String   @map("image_path")
+  pageNumber      Int      @map("page_number")
+  posX            Float    @map("pos_x")
+  posY            Float    @map("pos_y")
+  width           Float
+  height          Float
+  signerName      String   @map("signer_name")
+  signerPosition  String?  @map("signer_position")
+  organization    String?
+  createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document        Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@map("signatures")

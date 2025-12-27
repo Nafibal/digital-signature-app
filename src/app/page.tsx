@@ -56,7 +56,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Geometric pattern background */}
-          <div className="absolute inset-0 -z-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             {/* Large circle */}
             <div className="absolute top-10 right-1/4 w-96 h-96 rounded-full bg-neutral-200/40 blur-3xl"></div>
             {/* Medium circle */}
@@ -68,7 +68,7 @@ export default async function LandingPage() {
             <div className="absolute bottom-32 right-20 w-40 h-40 bg-neutral-300/20 rotate-12 blur-xl"></div>
             <div className="absolute top-1/3 right-1/3 w-24 h-24 bg-neutral-100/30 rotate-45 blur-lg"></div>
             {/* Dot pattern overlay */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.2)_1px,transparent_0)] [background-size:32px_32px]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.2)_1px,transparent_0)] bg-size-[32px_32px]"></div>
           </div>
         </section>
 
