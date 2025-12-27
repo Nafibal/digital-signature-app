@@ -8,8 +8,7 @@
  */
 export async function saveDocumentContent(
   documentId: string,
-  tiptapJson: Record<string, unknown>,
-  htmlContent?: string
+  htmlContent: string
 ): Promise<unknown> {
   const response = await fetch(`/api/documents/${documentId}/content`, {
     method: "POST",
@@ -17,8 +16,7 @@ export async function saveDocumentContent(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      contentJson: tiptapJson,
-      htmlContent, // Optional for backward compatibility
+      htmlContent,
     }),
   });
 

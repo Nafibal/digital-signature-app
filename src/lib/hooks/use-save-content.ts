@@ -3,20 +3,15 @@ import { saveDocumentContent } from "@/lib/api/content";
 
 interface SaveContentVariables {
   documentId: string;
-  contentJson: Record<string, unknown>;
-  htmlContent?: string; // Optional for backward compatibility
+  htmlContent: string;
 }
 
 export function useSaveContent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      documentId,
-      contentJson,
-      htmlContent,
-    }: SaveContentVariables) =>
-      saveDocumentContent(documentId, contentJson, htmlContent),
+    mutationFn: ({ documentId, htmlContent }: SaveContentVariables) =>
+      saveDocumentContent(documentId, htmlContent),
     onSuccess: (data, variables) => {
       // Invalidate document content query
       queryClient.invalidateQueries({

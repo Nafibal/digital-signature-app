@@ -28,6 +28,7 @@ export interface CreateDocumentResponse {
   description: string | null;
   documentType: string | null;
   currentStep: number;
+  subStep?: number | null;
   status: DocumentStatus;
 }
 
@@ -40,6 +41,7 @@ export interface UpdateDocumentRequest {
   documentType?: string;
   sourceType?: string;
   currentStep?: number;
+  subStep?: number;
 }
 
 /**
@@ -51,6 +53,7 @@ export interface UpdateDocumentResponse {
   description: string | null;
   documentType: string | null;
   currentStep: number;
+  subStep?: number | null;
   status: DocumentStatus;
   createdAt: string;
   updatedAt: string;
@@ -65,6 +68,7 @@ export interface GetDocumentResponse {
   description: string | null;
   documentType: string | null;
   currentStep: number;
+  subStep?: number | null;
   status: DocumentStatus;
   createdAt: string;
   updatedAt: string;
@@ -79,6 +83,7 @@ export interface Document {
   description: string | null;
   documentType: string | null;
   currentStep: number;
+  subStep?: number | null;
   status: DocumentStatus;
   createdAt: string;
   updatedAt: string;

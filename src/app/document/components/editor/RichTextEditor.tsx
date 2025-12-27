@@ -19,6 +19,7 @@ export interface RichTextEditorRef {
 
 // Helper function to sanitize content and remove empty text nodes
 const sanitizeContent = (content: TiptapJson | string): TiptapJson | string => {
+  // If it's a string (HTML), return it as is
   if (typeof content === "string") {
     return content;
   }
@@ -30,11 +31,12 @@ const sanitizeContent = (content: TiptapJson | string): TiptapJson | string => {
   const sanitizeNode = (node: TiptapNode): TiptapNode | null => {
     if (!node) return null;
 
-    // If it's a text node and empty, return null
+    // If it's a text node, only remove it if it's truly empty (no text at all)
     if (node.type === "text") {
-      if (!node.text || node.text.trim() === "") {
+      if (node.text === undefined || node.text === null) {
         return null;
       }
+      // Keep text nodes that have content, even if just whitespace
       return node;
     }
 
@@ -106,10 +108,15 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
 
     useEffect(() => {
       if (editor) {
-        onUpdate({
-          html: editor.getHTML(),
-          json: editor.getJSON(),
-        });
+        // Only call onUpdate if editor has content
+        const html = editor.getHTML();
+        const json = editor.getJSON();
+        if (html && html !== "<p></p>") {
+          onUpdate({
+            html,
+            json,
+          });
+        }
       }
     }, [editor]);
 

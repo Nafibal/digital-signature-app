@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate the request
@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const documentId = params.id;
+    const documentId = (await params).id;
 
     // Fetch the document with ownership check
     const document = await prisma.document.findFirst({
@@ -31,9 +31,21 @@ export async function GET(
         description: true,
         documentType: true,
         currentStep: true,
+        subStep: true,
         status: true,
         sourceType: true,
         pdfPath: true,
+        currentPdfId: true,
+        currentPdf: {
+          select: {
+            id: true,
+            pdfPath: true,
+            fileName: true,
+            fileSize: true,
+            pageCount: true,
+            status: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -60,7 +72,7 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate the request
@@ -72,7 +84,7 @@ export async function PATCH(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const documentId = params.id;
+    const documentId = (await params).id;
     const body = await req.json();
 
     // Validate that document belongs to user
@@ -109,8 +121,14 @@ export async function PATCH(
         ...(body.currentStep !== undefined && {
           currentStep: body.currentStep,
         }),
+        ...(body.subStep !== undefined && {
+          subStep: body.subStep,
+        }),
         ...(body.pdfPath !== undefined && {
           pdfPath: body.pdfPath,
+        }),
+        ...(body.currentPdfId !== undefined && {
+          currentPdfId: body.currentPdfId,
         }),
       },
       select: {
@@ -119,9 +137,21 @@ export async function PATCH(
         description: true,
         documentType: true,
         currentStep: true,
+        subStep: true,
         status: true,
         sourceType: true,
         pdfPath: true,
+        currentPdfId: true,
+        currentPdf: {
+          select: {
+            id: true,
+            pdfPath: true,
+            fileName: true,
+            fileSize: true,
+            pageCount: true,
+            status: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },

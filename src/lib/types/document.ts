@@ -8,6 +8,7 @@
 /**
  * Tiptap JSON Types
  * Represents the structure of Tiptap editor content
+ * @deprecated Now using HTML storage instead of JSON
  */
 export interface TiptapJson extends Record<string, unknown> {
   type: string;
@@ -64,10 +65,10 @@ export interface Step2FormData {
 /**
  * Step 3a: Fill Content Data
  * Collected in step-3-fill-content.tsx
- * Maps to DocumentContent.contentJson
+ * Maps to DocumentContent.htmlContent
  */
 export interface Step3aFormData {
-  body: TiptapJson; // Part of contentJson
+  html: string; // HTML content
 }
 
 /**
@@ -109,8 +110,7 @@ export interface SignatureData {
 
 /**
  * Document Content JSON Structure
- * Stored in DocumentContent.contentJson
- * Matches the structure used in step-3-fill-content.tsx
+ * @deprecated Now using HTML storage instead of JSON
  */
 export interface DocumentContentJson {
   title: TiptapJson;
@@ -136,9 +136,7 @@ export interface DocumentWorkflowData {
 
   // Document content (Step 3a)
   content: {
-    title: string;
-    body: string;
-    footer: string;
+    html: string;
   };
 
   // Signature (Step 3b)
@@ -155,7 +153,7 @@ export interface DocumentWorkflowData {
 
   // Workflow state
   currentStep: number;
-  subStep: number;
+  subStep?: number; // 1 or 2 for step 3 sub-steps, optional
 }
 
 /**
@@ -219,24 +217,14 @@ export function validateStep2FormData(data: Step2FormData): boolean {
  * Validates Step 3a form data
  */
 export function validateStep3aFormData(data: Step3aFormData): boolean {
-  // Check if title and body have content
-  const hasContent = (tiptapJson: TiptapJson): boolean => {
-    if (!tiptapJson.content || tiptapJson.content.length === 0) {
-      return false;
-    }
-    // Check if any node has text content
-    return tiptapJson.content.some((node) => {
-      if (node.text && node.text.trim() !== "") {
-        return true;
-      }
-      if (node.content) {
-        return hasContent({ type: "doc", content: node.content });
-      }
-      return false;
-    });
-  };
+  // Check if HTML exists and is a string
+  if (!data.html || typeof data.html !== "string") {
+    return false;
+  }
 
-  return hasContent(data.body);
+  // Check if HTML has meaningful content
+  const strippedHtml = data.html.replace(/<[^>]*>/g, "").trim();
+  return strippedHtml.length > 0;
 }
 
 /**
@@ -258,9 +246,7 @@ export interface DocumentContentResponse {
   content: {
     id: string;
     documentId: string;
-    contentJson: Record<string, unknown>;
-    htmlContent: string | null;
-    previewPdfPath: string | null;
+    htmlContent: string;
     version: number;
     createdAt: string;
     updatedAt: string;
@@ -274,4 +260,37 @@ export interface DocumentContentResponse {
  */
 export interface PDFPreviewResponse {
   pdfBytes: ArrayBuffer;
+}
+
+/**
+ * Document PDF Response
+ * Response from /api/documents/[id]/generate-pdf
+ */
+export interface DocumentPdfResponse {
+  id: string;
+  documentId: string;
+  pdfPath: string;
+  fileName: string;
+  fileSize: number;
+  pageCount?: number;
+  status: string;
+  publicUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Document PDF Type
+ * Represents a PDF document in the database
+ */
+export interface DocumentPdf {
+  id: string;
+  documentId: string;
+  pdfPath: string;
+  fileName: string;
+  fileSize: number;
+  pageCount?: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Step3aFormData, TiptapJson } from "@/lib/types/document";
+import { Step3aFormData } from "@/lib/types/document";
 import RichTextEditor, { RichTextEditorRef } from "./editor/RichTextEditor";
 import {
   Card,
@@ -30,11 +30,11 @@ export default function Step3FillContent({
   const [previewError, setPreviewError] = useState<string | null>(null);
 
   // Handle editor updates
-  const handleEditorUpdate = (editorContent: {
+  const handleEditorUpdate = (updatedContent: {
     html: string;
-    json: TiptapJson;
+    json: unknown;
   }) => {
-    const newContent = { ...content, body: editorContent.json };
+    const newContent = { ...content, html: updatedContent.html };
     setContent(newContent);
   };
 
@@ -102,7 +102,9 @@ export default function Step3FillContent({
         <RichTextEditor
           ref={editorRef}
           onUpdate={handleEditorUpdate}
-          initialContent={content.body}
+          initialContent={
+            content.html || "<p>Start typing your document...</p>"
+          }
         />
       </div>
 

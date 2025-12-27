@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 // Create or update document content
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate the request
@@ -19,13 +19,22 @@ export async function POST(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const documentId = params.id;
+    const documentId = (await params).id;
     const body = await req.json();
 
-    // Validate required fields
-    if (!body.contentJson && !body.htmlContent) {
+    // Extract HTML content from body (handle both string and object formats)
+    let htmlContent: string;
+    if (typeof body.htmlContent === "string") {
+      htmlContent = body.htmlContent;
+    } else if (
+      body.htmlContent &&
+      typeof body.htmlContent === "object" &&
+      "html" in body.htmlContent
+    ) {
+      htmlContent = (body.htmlContent as { html: string }).html;
+    } else {
       return NextResponse.json(
-        { message: "contentJson or htmlContent is required" },
+        { message: "htmlContent is required" },
         { status: 400 }
       );
     }
@@ -58,8 +67,7 @@ export async function POST(
       content = await prisma.documentContent.update({
         where: { id: documentWithContent.currentContentId },
         data: {
-          contentJson: body.contentJson || {},
-          htmlContent: body.htmlContent || null,
+          htmlContent: htmlContent,
         },
       });
     } else {
@@ -67,8 +75,7 @@ export async function POST(
       content = await prisma.documentContent.create({
         data: {
           documentId,
-          contentJson: body.contentJson || {},
-          htmlContent: body.htmlContent || null,
+          htmlContent: htmlContent,
           version: 1,
         },
       });
@@ -94,7 +101,7 @@ export async function POST(
 // Get current document content
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate the request
@@ -106,7 +113,7 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const documentId = params.id;
+    const documentId = (await params).id;
 
     // Validate that document belongs to user
     const existingDocument = await prisma.document.findFirst({

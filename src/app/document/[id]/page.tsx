@@ -6,7 +6,7 @@ import DocumentWorkflowClient from "../document-workflow-client";
 export default async function DocumentEditPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -21,5 +21,6 @@ export default async function DocumentEditPage({
   // In a real implementation, you would load the document data here
   // and pass it to the client component
 
-  return <DocumentWorkflowClient session={session} documentId={params.id} />;
+  const { id } = await params;
+  return <DocumentWorkflowClient session={session} documentId={id} />;
 }

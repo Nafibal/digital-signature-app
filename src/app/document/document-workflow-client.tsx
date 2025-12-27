@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FileSignature, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WorkflowSteps from "@/app/dashboard/components/workflow-steps";
+import Step3SubStepper from "./components/step-3-sub-stepper";
 import Step1Check from "./components/step-1-check";
 import Step2Upload from "./components/step-2-upload";
 import Step3FillContent from "./components/step-3-fill-content";
@@ -16,7 +17,7 @@ import {
   Step3aFormData,
   Step3bFormData,
   SignaturePosition,
-  TiptapJson,
+  DocumentPdfResponse,
   validateStep3aFormData,
 } from "@/lib/types/document";
 import { useCreateDocument } from "@/lib/hooks/use-create-document";
@@ -65,18 +66,19 @@ export default function DocumentWorkflowClient({
   const [uploadMode, setUploadMode] = useState<"upload" | "create">("upload");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  // Step 3.1: Fill Content - Using Tiptap JSON structure
+  // Step 3.1: Fill Content - Using HTML structure
   const [content, setContent] = useState<Step3aFormData>({
-    body: {
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [{ type: "text", text: "" }],
-        },
-      ],
-    },
+    html: "<p>Start typing your document...</p>",
   });
+
+  // PDF generation state
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfGenerationError, setPdfGenerationError] = useState<string | null>(
+    null
+  );
+  const [documentPdf, setDocumentPdf] = useState<DocumentPdfResponse | null>(
+    null
+  );
 
   // Step 3.2: Add Signature
   const [signature, setSignature] = useState<string | null>(null);
@@ -112,6 +114,15 @@ export default function DocumentWorkflowClient({
     if (documentDataFetched && !hasInitialized.current) {
       // Initialize currentStep from document's currentStep
       setCurrentStep(documentDataFetched.currentStep);
+
+      // Initialize subStep if available (for step 3 documents)
+      if (
+        documentDataFetched.currentStep === 3 &&
+        documentDataFetched.subStep
+      ) {
+        setSubStep(documentDataFetched.subStep);
+      }
+
       hasInitialized.current = true;
     }
   }, [documentDataFetched]);
@@ -120,14 +131,21 @@ export default function DocumentWorkflowClient({
   useEffect(() => {
     if (contentData?.content && !hasInitializedContent.current) {
       const fetchedContent = contentData.content;
-      if (fetchedContent.contentJson) {
+      if (fetchedContent.htmlContent) {
         setContent({
-          body: fetchedContent.contentJson as TiptapJson,
+          html: fetchedContent.htmlContent,
         });
         hasInitializedContent.current = true;
       }
     }
   }, [contentData]);
+
+  // Initialize PDF data from fetched document
+  useEffect(() => {
+    if (documentDataFetched?.currentPdf) {
+      setDocumentPdf(documentDataFetched.currentPdf as DocumentPdfResponse);
+    }
+  }, [documentDataFetched]);
 
   // Reset content initialization flag when document changes
   useEffect(() => {
@@ -182,8 +200,11 @@ export default function DocumentWorkflowClient({
     onSuccess: (data) => {
       setDocumentUpdateSuccess(true);
       setDocumentUpdateError(null);
-      // Proceed to next step
-      setCurrentStep(2);
+      // Only proceed to step 2 if we're on step 1
+      // For step 2 and 3, navigation is handled separately
+      if (currentStep === 1) {
+        setCurrentStep(2);
+      }
     },
     onError: (error) => {
       setDocumentUpdateError(error);
@@ -265,16 +286,48 @@ export default function DocumentWorkflowClient({
 
     // Normal navigation for other steps
     if (currentStep === 3 && subStep === 1) {
-      // Auto-save content before proceeding to signature step
+      // Auto-save content and generate PDF before proceeding to signature step
       if (createdDocumentId) {
         try {
+          setIsGeneratingPdf(true);
+          setPdfGenerationError(null);
+
+          // 1. Save HTML content to database
           await saveContent({
             documentId: createdDocumentId,
-            contentJson: content.body as unknown as Record<string, unknown>,
+            htmlContent: content.html,
+          });
+
+          // 2. Generate PDF and upload to Supabase
+          const pdfResponse = await fetch(
+            `/api/documents/${createdDocumentId}/generate-pdf`,
+            {
+              method: "POST",
+            }
+          );
+
+          if (!pdfResponse.ok) {
+            const errorData = await pdfResponse.json();
+            throw new Error(errorData.message || "Failed to generate PDF");
+          }
+
+          const pdfResult = (await pdfResponse.json()) as DocumentPdfResponse;
+          setDocumentPdf(pdfResult);
+
+          // 3. Update document with currentPdfId and subStep = 2
+          await updateDocument({
+            id: createdDocumentId,
+            currentPdfId: pdfResult.id,
+            subStep: 2,
           });
         } catch (error) {
-          console.error("Failed to save content:", error);
-          // Still proceed even if save fails
+          console.error("Failed to generate PDF or save content:", error);
+          setPdfGenerationError(
+            error instanceof Error ? error.message : "Failed to generate PDF"
+          );
+          // Still proceed even if PDF generation fails
+        } finally {
+          setIsGeneratingPdf(false);
         }
       }
       setSubStep(2);
@@ -290,10 +343,10 @@ export default function DocumentWorkflowClient({
     setSaveStatus("saving");
 
     try {
-      // Save content with current Tiptap JSON
+      // Save content with current HTML
       await saveContent({
         documentId: createdDocumentId,
-        contentJson: content.body as unknown as Record<string, unknown>,
+        htmlContent: content.html,
       });
 
       setIsSaving(false);
@@ -323,7 +376,8 @@ export default function DocumentWorkflowClient({
 
   const isStep2Valid = uploadMode === "upload" ? uploadedFile !== null : true;
 
-  const isStep3aValid = validateStep3aFormData(content);
+  const isStep3aValid =
+    content && content.html ? validateStep3aFormData(content) : false;
 
   const isStep3bValid = signature !== null;
 
@@ -427,6 +481,13 @@ export default function DocumentWorkflowClient({
           <WorkflowSteps currentStep={currentStep} />
         </div>
 
+        {/* Step 3 Sub-Stepper - Only visible when on step 3 */}
+        {currentStep === 3 && (
+          <div className="mb-6">
+            <Step3SubStepper currentSubStep={subStep} />
+          </div>
+        )}
+
         {/* Step Content */}
         <div className="mb-8">
           {currentStep === 1 && (
@@ -483,6 +544,7 @@ export default function DocumentWorkflowClient({
 
           {currentStep === 3 && subStep === 2 && (
             <Step3AddSignature
+              documentPdf={documentPdf}
               signature={signature}
               setSignature={setSignature}
               signaturePosition={signaturePosition}

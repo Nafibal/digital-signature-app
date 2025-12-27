@@ -15,9 +15,11 @@ import {
   SignaturePosition,
   Step3bFormData,
   DEFAULT_ORGANIZATIONS,
+  DocumentPdfResponse,
 } from "@/lib/types/document";
 
 interface Step3AddSignatureProps {
+  documentPdf: DocumentPdfResponse | null;
   signature: string | null;
   setSignature: React.Dispatch<React.SetStateAction<string | null>>;
   signaturePosition: SignaturePosition;
@@ -27,6 +29,7 @@ interface Step3AddSignatureProps {
 }
 
 export default function Step3AddSignature({
+  documentPdf,
   signature,
   setSignature,
   signaturePosition,
@@ -64,7 +67,7 @@ export default function Step3AddSignature({
         setSignature(signatureJson);
       }
 
-      // Only add to history if it's a new signature (not the same as the last one)
+      // Only add to history if it's a new signature (not same as last one)
       setSignatureHistory((prev) => {
         const lastSignature = prev[prev.length - 1];
         if (lastSignature !== signatureJson) {
@@ -148,7 +151,7 @@ export default function Step3AddSignature({
                 ))}
               </select>
               <p className="text-sm text-neutral-500">
-                Choose the department or unit for this signature
+                Choose department or unit for this signature
               </p>
               {errors.organization && (
                 <p className="text-sm text-red-500">
@@ -176,7 +179,7 @@ export default function Step3AddSignature({
                 className="flex h-10 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
               <p className="text-sm text-neutral-500">
-                Enter the full name of the person who will sign the document
+                Enter the full name of person who will sign the document
               </p>
               {errors.signerName && (
                 <p className="text-sm text-red-500">
@@ -204,7 +207,7 @@ export default function Step3AddSignature({
                 className="flex h-10 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
               <p className="text-sm text-neutral-500">
-                Enter the job title or position of the signer
+                Enter the job title or position of signer
               </p>
               {errors.position && (
                 <p className="text-sm text-red-500">
@@ -269,45 +272,54 @@ export default function Step3AddSignature({
         <CardHeader>
           <CardTitle>Place Signature</CardTitle>
           <CardDescription>
-            Click on the document to position your signature
+            Click on document to position your signature
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* PDF Preview Placeholder */}
-          <div
-            onClick={handlePdfClick}
-            className="relative cursor-pointer rounded-lg border border-neutral-200 bg-white p-8 shadow-sm"
-          >
-            <div className="flex items-center justify-center gap-3 text-neutral-400">
+          {/* PDF Preview */}
+          {documentPdf ? (
+            <div
+              onClick={handlePdfClick}
+              className="relative cursor-pointer rounded-lg border border-neutral-200 bg-white overflow-hidden"
+            >
+              <iframe
+                src={documentPdf.publicUrl}
+                className="w-full min-h-[600px] border-0"
+                title="PDF Preview"
+              />
+              {/* Signature Placement Indicator - Visual Text */}
+              {signatureData && (
+                <div
+                  className="absolute border-2 border-dashed border-blue-500 bg-blue-50 px-4 py-3 pointer-events-none"
+                  style={{
+                    left: `${signaturePosition.x}px`,
+                    top: `${signaturePosition.y}px`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  <p className="text-sm font-semibold text-neutral-900">
+                    {signatureData.signerName}
+                  </p>
+                  <p className="text-xs text-neutral-600">
+                    {signatureData.position}
+                  </p>
+                  <p className="text-xs text-neutral-600">
+                    {signatureData.organization}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-3 text-neutral-400 rounded-lg border border-neutral-200 bg-white p-8 shadow-sm">
               <FileText className="h-12 w-12" />
               <div className="text-sm">
-                <p className="font-medium">PDF Preview</p>
-                <p className="text-xs">Click to position signature</p>
+                <p className="font-medium">No PDF Available</p>
+                <p className="text-xs">
+                  PDF will be generated when you proceed from step 3.1
+                </p>
               </div>
             </div>
-
-            {/* Signature Placement Indicator - Visual Text */}
-            {signatureData && (
-              <div
-                className="absolute border-2 border-dashed border-blue-500 bg-blue-50 px-4 py-3"
-                style={{
-                  left: `${signaturePosition.x}px`,
-                  top: `${signaturePosition.y}px`,
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                <p className="text-sm font-semibold text-neutral-900">
-                  {signatureData.signerName}
-                </p>
-                <p className="text-xs text-neutral-600">
-                  {signatureData.position}
-                </p>
-                <p className="text-xs text-neutral-600">
-                  {signatureData.organization}
-                </p>
-              </div>
-            )}
-          </div>
+          )}
 
           {/* Position Info */}
           {signature && (
