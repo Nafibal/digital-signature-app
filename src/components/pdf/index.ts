@@ -5,4 +5,3 @@
  */
 
 export { default as PDFDocumentRenderer } from "./PDFDocumentRenderer";
-export { default as PDFPreview } from "./PDFPreview";

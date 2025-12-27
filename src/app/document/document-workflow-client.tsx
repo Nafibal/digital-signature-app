@@ -476,8 +476,6 @@ export default function DocumentWorkflowClient({
                   content={content}
                   setContent={setContent}
                   documentId={createdDocumentId}
-                  previewUrl={null}
-                  isGeneratingPreview={false}
                 />
               )}
             </>
