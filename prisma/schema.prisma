@@ -96,6 +96,7 @@ model Document {
   description   String?            @map("description")
   documentType  String?            @map("document_type")
   currentStep   Int                @map("current_step")
+  subStep       Int?               @map("sub_step") // 1 or 2 for step 3 sub-steps
   status        DocumentStatus
   
   // Document source tracking
@@ -104,6 +105,9 @@ model Document {
   
   // Content tracking for create document scenario
   currentContentId String?         @unique @map("current_content_id") @db.Uuid // Reference to current content
+  
+  // PDF tracking for signing
+  currentPdfId  String?            @unique @map("current_pdf_id") @db.Uuid // Reference to current PDF
   
   createdAt     DateTime           @default(now()) @map("created_at")
   updatedAt     DateTime           @updatedAt @map("updated_at")
@@ -114,6 +118,8 @@ model Document {
   drafts        DocumentDraft[]
   signatures    Signature[]
   currentContent DocumentContent?  @relation("DocumentCurrentContent", fields: [currentContentId], references: [id])
+  currentPdf    DocumentPdf?       @relation("DocumentCurrentPdf", fields: [currentPdfId], references: [id])
+  pdfs          DocumentPdf[]      @relation("DocumentPdfs")
 
   @@index([ownerId])
   @@map("documents")
@@ -123,12 +129,8 @@ model DocumentContent {
   id          String   @id @default(uuid()) @db.Uuid
   documentId  String   @db.Uuid @map("document_id")
 
-  // Content data
-  contentJson Json     @map("content_json") // Tiptap content
-  htmlContent String?  @map("html_content") // Raw HTML content
-
-  // Preview tracking
-  previewPdfPath String? @map("preview_pdf_path") // Generated preview PDF path
+  // Content data - CHANGED: Now storing HTML instead of JSON
+  htmlContent String   @map("html_content") // Raw HTML content (required)
 
   // Version tracking
   version     Int      @default(1)
@@ -143,6 +145,35 @@ model DocumentContent {
   @@index([documentId])
   @@index([documentId, version])
   @@map("document_contents")
+}
+
+///////////////////////////////////////////////////////////
+// PDF DOCUMENTS
+///////////////////////////////////////////////////////////
+
+model DocumentPdf {
+  id          String   @id @default(uuid()) @db.Uuid
+  documentId  String   @db.Uuid @map("document_id")
+  
+  // PDF metadata
+  pdfPath     String   @map("pdf_path") // Supabase Storage path
+  fileName    String   @map("file_name")
+  fileSize    Int      @map("file_size")
+  pageCount   Int?     @map("page_count") // Number of pages in PDF
+  
+  // Status tracking
+  status      String   @default("ready") // 'ready' | 'signed'
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  document    Document @relation("DocumentPdfs", fields: [documentId], references: [id], onDelete: Cascade)
+  signatures  Signature[]
+  currentForDocument Document? @relation("DocumentCurrentPdf")
+  
+  @@index([documentId])
+  @@map("document_pdfs")
 }
 
 ///////////////////////////////////////////////////////////
@@ -171,6 +202,8 @@ model DocumentDraft {
 model Signature {
   id              String   @id @default(uuid()) @db.Uuid
   documentId      String   @db.Uuid @map("document_id")
+  documentPdfId   String?  @db.Uuid @map("document_pdf_id") // Reference to PDF
+  
   imagePath       String   @map("image_path")
   pageNumber      Int      @map("page_number")
   posX            Float    @map("pos_x")
@@ -184,8 +217,10 @@ model Signature {
 
   // Relations
   document        Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentPdf     DocumentPdf? @relation(fields: [documentPdfId], references: [id])
 
   @@index([documentId])
+  @@index([documentPdfId])
   @@map("signatures")
 }
 
