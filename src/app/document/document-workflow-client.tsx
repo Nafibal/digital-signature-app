@@ -13,6 +13,8 @@ import Step3FillContent from "./components/step-3-fill-content";
 import Step3AddSignature from "./components/step-3-add-signature";
 import Step4FinalReview from "./components/step-4-final-review";
 import WorkflowNavigation from "./components/workflow-navigation";
+import { WorkflowHeader } from "@/components/layout/workflow-header";
+import { LoadingState } from "@/components/ui/loading-state";
 import {
   Step1FormData,
   Step3aFormData,
@@ -453,47 +455,12 @@ export default function DocumentWorkflowClient({
   if (!documentDataFetched && initialDocumentId) {
     return (
       <div className="min-h-screen bg-white">
-        {/* Header */}
-        <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/80 backdrop-blur-md">
-          <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-            {/* Logo */}
-            <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-950 text-white">
-                <FileSignature className="h-5 w-5" />
-              </div>
-              <span>DigiSign.</span>
-            </div>
-
-            {/* User Info & Sign Out */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="hidden h-8 w-8 items-center justify-center rounded-full bg-neutral-100 md:flex">
-                  <User className="h-4 w-4 text-neutral-600" />
-                </div>
-                <span className="hidden text-sm font-medium text-neutral-700 md:block">
-                  {user.name || user.email}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sign Out</span>
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Loading State */}
-        <main className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 md:px-6 md:py-12">
-          <div className="text-center">
-            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-neutral-200 border-t-neutral-900 mx-auto" />
-            <p className="text-neutral-600">Loading document...</p>
-          </div>
-        </main>
+        <WorkflowHeader
+          userName={user.name || user.email}
+          userEmail={user.email}
+          onSignOut={handleSignOut}
+        />
+        <LoadingState message="Loading document..." fullScreen />
       </div>
     );
   }
@@ -501,38 +468,11 @@ export default function DocumentWorkflowClient({
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          {/* Logo */}
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-950 text-white">
-              <FileSignature className="h-5 w-5" />
-            </div>
-            <span>DigiSign.</span>
-          </div>
-
-          {/* User Info & Sign Out */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="hidden h-8 w-8 items-center justify-center rounded-full bg-neutral-100 md:flex">
-                <User className="h-4 w-4 text-neutral-600" />
-              </div>
-              <span className="hidden text-sm font-medium text-neutral-700 md:block">
-                {user.name || user.email}
-              </span>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSignOut}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <WorkflowHeader
+        userName={user.name || user.email}
+        userEmail={user.email}
+        onSignOut={handleSignOut}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 md:px-6 md:py-12">
@@ -584,14 +524,7 @@ export default function DocumentWorkflowClient({
           {currentStep === 3 && subStep === 1 && (
             <>
               {isContentLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-neutral-200 border-t-neutral-900 mx-auto" />
-                    <p className="text-sm text-neutral-600">
-                      Loading saved content...
-                    </p>
-                  </div>
-                </div>
+                <LoadingState message="Loading saved content..." />
               ) : (
                 <Step3FillContent
                   content={content}

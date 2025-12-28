@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { Step1FormData } from "@/lib/types/document";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { StatusMessage } from "@/components/ui/status-message";
 
 interface Step1CheckProps {
   defaultValues?: Step1FormData;
@@ -66,41 +66,24 @@ export default function Step1Check({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Success Message */}
         {isSuccess && (
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-green-700 dark:bg-green-950 dark:text-green-400">
-            <CheckCircle2 className="h-5 w-5" />
-            <p className="text-sm font-medium">Document Details Saved!</p>
-          </div>
+          <StatusMessage type="success" message="Document Details Saved!" />
         )}
 
-        {/* Error Message */}
         {error && (
-          <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-950 dark:text-red-400">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Failed to create document</p>
-              <p className="text-xs text-red-600 dark:text-red-300">
-                {error.message}
-              </p>
-            </div>
-          </div>
+          <StatusMessage
+            type="error"
+            message="Failed to create document"
+            description={error.message}
+          />
         )}
 
-        {/* Creating Document Message */}
         {isCreating && (
-          <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-3 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <p className="text-sm font-medium">Creating document...</p>
-          </div>
+          <StatusMessage type="loading" message="Creating document..." />
         )}
 
-        {/* Updating Document Message */}
         {isUpdating && (
-          <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-3 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <p className="text-sm font-medium">Updating document...</p>
-          </div>
+          <StatusMessage type="loading" message="Updating document..." />
         )}
 
         <div className="space-y-6">
