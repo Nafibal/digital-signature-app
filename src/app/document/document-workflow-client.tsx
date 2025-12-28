@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileSignature, LogOut, User } from "lucide-react";
@@ -75,6 +75,30 @@ export default function DocumentWorkflowClient({
   } = state;
 
   const effectiveDocumentId = createdDocumentId || initialDocumentId;
+
+  // Use refs to store current state values for functional updates
+  // This prevents wrapper functions from being recreated when state changes
+  const signatureImageRef = useRef(signatureImage);
+  const signatureDataRef = useRef(signatureData);
+  const signaturePositionRef = useRef(signaturePosition);
+  const signatureHistoryRef = useRef(signatureHistory);
+
+  // Update refs when state changes
+  useEffect(() => {
+    signatureImageRef.current = signatureImage;
+  }, [signatureImage]);
+
+  useEffect(() => {
+    signatureDataRef.current = signatureData;
+  }, [signatureData]);
+
+  useEffect(() => {
+    signaturePositionRef.current = signaturePosition;
+  }, [signaturePosition]);
+
+  useEffect(() => {
+    signatureHistoryRef.current = signatureHistory;
+  }, [signatureHistory]);
 
   // Create stable callback for form state changes
   const handleFormStateChange = useCallback(
@@ -172,49 +196,49 @@ export default function DocumentWorkflowClient({
   const setSignatureImageWrapper = useCallback(
     (action: React.SetStateAction<string | null>) => {
       if (typeof action === "function") {
-        const result = action(signatureImage);
+        const result = action(signatureImageRef.current);
         updateState({ signatureImage: result });
       } else {
         updateState({ signatureImage: action });
       }
     },
-    [signatureImage, updateState]
+    [updateState]
   );
 
   const setSignatureDataWrapper = useCallback(
     (action: React.SetStateAction<Step3bFormData | null>) => {
       if (typeof action === "function") {
-        const result = action(signatureData);
+        const result = action(signatureDataRef.current);
         updateState({ signatureData: result });
       } else {
         updateState({ signatureData: action });
       }
     },
-    [signatureData, updateState]
+    [updateState]
   );
 
   const setSignaturePositionWrapper = useCallback(
     (action: React.SetStateAction<SignaturePosition>) => {
       if (typeof action === "function") {
-        const result = action(signaturePosition);
+        const result = action(signaturePositionRef.current);
         updateState({ signaturePosition: result });
       } else {
         updateState({ signaturePosition: action });
       }
     },
-    [signaturePosition, updateState]
+    [updateState]
   );
 
   const setSignatureHistoryWrapper = useCallback(
     (action: React.SetStateAction<string[]>) => {
       if (typeof action === "function") {
-        const result = action(signatureHistory);
+        const result = action(signatureHistoryRef.current);
         updateState({ signatureHistory: result });
       } else {
         updateState({ signatureHistory: action });
       }
     },
-    [signatureHistory, updateState]
+    [updateState]
   );
 
   // Use the create document mutation

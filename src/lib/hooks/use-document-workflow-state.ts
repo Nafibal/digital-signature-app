@@ -112,10 +112,6 @@ export function useDocumentWorkflowState({
    * This allows updating only specific parts of the state
    */
   const updateState = useCallback((updates: Partial<DocumentWorkflowState>) => {
-    console.log(
-      "[DEBUG updateState] Called with updates:",
-      Object.keys(updates)
-    );
     setState((prev) => {
       const newState = { ...prev, ...updates };
 
