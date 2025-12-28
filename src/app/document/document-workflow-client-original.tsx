@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileSignature, LogOut, User } from "lucide-react";
@@ -18,11 +18,12 @@ import {
   Step3aFormData,
   Step3bFormData,
   SignaturePosition,
+  DocumentPdfResponse,
   validateStep3aFormData,
 } from "@/lib/types/document";
 import { useCreateDocument } from "@/lib/hooks/use-create-document";
 import { useGetContent } from "@/lib/hooks/use-get-content";
-import { useDocumentWorkflowState } from "@/lib/hooks/use-document-workflow-state";
+import { useGetDocument } from "@/lib/hooks/use-get-document";
 import { useUpdateDocument } from "@/lib/hooks/use-update-document";
 import { useSaveContent } from "@/lib/hooks/use-save-content";
 
@@ -30,7 +31,7 @@ type Session = typeof import("@/lib/auth").auth.$Infer.Session;
 
 export default function DocumentWorkflowClient({
   session,
-  documentId: initialDocumentId,
+  documentId,
 }: {
   session: Session;
   documentId?: string;
@@ -39,70 +40,113 @@ export default function DocumentWorkflowClient({
   const queryClient = useQueryClient();
   const user = session.user;
 
-  // Consolidated state management
-  const { state, updateState, updateStep, setDocumentId } =
-    useDocumentWorkflowState({
-      documentId: initialDocumentId,
-    });
-
-  const {
-    currentStep,
-    subStep,
-    createdDocumentId,
-    documentDataFetched,
-    step1FormState,
-    uploadMode,
-    uploadedFile,
-    content,
-    documentPdf,
-    isGeneratingPdf,
-    pdfGenerationError,
-    signatureImage,
-    signatureData,
-    signaturePosition,
-    signatureHistory,
-    finalPdfUrl,
-    isSaving,
-    saveStatus,
-    documentCreationError,
-    documentCreationSuccess,
-    documentUpdateError,
-    documentUpdateSuccess,
-  } = state;
-
-  const effectiveDocumentId = createdDocumentId || initialDocumentId;
-
-  // Create stable callback for form state changes
-  const handleFormStateChange = useCallback(
-    (formState: { isDirty: boolean; getValues: () => Step1FormData }) => {
-      updateState({ step1FormState: formState });
-    },
-    [updateState]
+  // State management
+  const [currentStep, setCurrentStep] = useState(1);
+  const [subStep, setSubStep] = useState(1); // 1 or 2 for Step 3
+  const [createdDocumentId, setCreatedDocumentId] = useState<string | null>(
+    documentId || null
   );
+
+  // Fetch document data if editing an existing document
+  const effectiveDocumentId = createdDocumentId || documentId;
+  const { data: documentDataFetched, isLoading: isDocumentLoading } =
+    useGetDocument(effectiveDocumentId);
+  const [documentCreationError, setDocumentCreationError] =
+    useState<Error | null>(null);
+  const [documentCreationSuccess, setDocumentCreationSuccess] = useState(false);
+  const [documentUpdateError, setDocumentUpdateError] = useState<Error | null>(
+    null
+  );
+  const [documentUpdateSuccess, setDocumentUpdateSuccess] = useState(false);
+
+  // Track Step 1 form state (isDirty and getValues)
+  const [step1FormState, setStep1FormState] = useState<{
+    isDirty: boolean;
+    getValues: () => Step1FormData;
+  } | null>(null);
+
+  // Step 2: Upload/Create
+  const [uploadMode, setUploadMode] = useState<"upload" | "create">("upload");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  // Step 3.1: Fill Content - Using HTML structure
+  const [content, setContent] = useState<Step3aFormData>({
+    html: "<p>Start typing your document...</p>",
+  });
+
+  // PDF generation state
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfGenerationError, setPdfGenerationError] = useState<string | null>(
+    null
+  );
+  const [documentPdf, setDocumentPdf] = useState<DocumentPdfResponse | null>(
+    null
+  );
+
+  // Step 3.2: Add Signature
+  const [signatureImage, setSignatureImage] = useState<string | null>(null);
+  const [signatureData, setSignatureData] = useState<Step3bFormData | null>(
+    null
+  );
+  const [signaturePosition, setSignaturePosition] = useState<SignaturePosition>(
+    {
+      x: 0,
+      y: 0,
+      page: 1,
+    }
+  );
+  const [signatureHistory, setSignatureHistory] = useState<string[]>([]);
+
+  // Step 4: Final Review
+  const [finalPdfUrl, setFinalPdfUrl] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+
+  // Track if we've initialized state from fetched document
+  const hasInitialized = useRef(false);
+
+  // Track if content has been initialized from draft
+  const hasInitializedContent = useRef(false);
 
   // Fetch document content
   const { data: contentData, isLoading: isContentLoading } = useGetContent(
-    effectiveDocumentId || null
+    createdDocumentId || documentId || null
   );
+
+  // Initialize state from fetched document data (only on first load)
+  useEffect(() => {
+    if (documentDataFetched && !hasInitialized.current) {
+      // Initialize currentStep from document's currentStep
+      setCurrentStep(documentDataFetched.currentStep);
+
+      // Initialize subStep if available (for step 3 documents)
+      if (
+        documentDataFetched.currentStep === 3 &&
+        documentDataFetched.subStep
+      ) {
+        setSubStep(documentDataFetched.subStep);
+      }
+
+      hasInitialized.current = true;
+    }
+  }, [documentDataFetched]);
 
   // Initialize content from fetched document content
   useEffect(() => {
-    if (contentData?.content) {
+    if (contentData?.content && !hasInitializedContent.current) {
       const fetchedContent = contentData.content;
-      if (
-        fetchedContent.htmlContent &&
-        content.html === "<p>Start typing your document...</p>"
-      ) {
-        updateState({
-          content: {
-            html: fetchedContent.htmlContent,
-          },
+      if (fetchedContent.htmlContent) {
+        setContent({
+          html: fetchedContent.htmlContent,
         });
+        hasInitializedContent.current = true;
       }
     }
-  }, [contentData, content.html, updateState]);
+  }, [contentData]);
 
-  // Initialize PDF data from fetched document
+  // Initialize PDF data from fetched document on initial load only
   useEffect(() => {
     // Only initialize if:
     // 1. We have fetched data with currentPdf
@@ -113,22 +157,14 @@ export default function DocumentWorkflowClient({
       !documentPdf &&
       documentDataFetched.currentPdfId
     ) {
-      updateState({
-        documentPdf: documentDataFetched.currentPdf as {
-          id: string;
-          documentId: string;
-          pdfPath: string;
-          fileName: string;
-          fileSize: number;
-          pageCount?: number;
-          status: string;
-          publicUrl: string;
-          createdAt: string;
-          updatedAt: string;
-        },
-      });
+      setDocumentPdf(documentDataFetched.currentPdf as DocumentPdfResponse);
     }
-  }, [documentDataFetched?.currentPdf, documentPdf, updateState]);
+  }, [documentDataFetched?.currentPdf, documentPdf]);
+
+  // Reset content initialization flag when document changes
+  useEffect(() => {
+    hasInitializedContent.current = false;
+  }, [documentId, createdDocumentId]);
 
   const handleSignOut = async () => {
     router.push("/login");
@@ -138,88 +174,11 @@ export default function DocumentWorkflowClient({
     router.push("/dashboard");
   };
 
-  // Create wrapper functions that match React.Dispatch<React.SetStateAction<T>>
-  // These allow child components to work with our consolidated state
-  const setUploadModeWrapper = (
-    action: React.SetStateAction<"upload" | "create">
-  ) => {
-    if (typeof action === "function") {
-      const result = action(uploadMode);
-      updateState({ uploadMode: result });
-    } else {
-      updateState({ uploadMode: action });
-    }
-  };
-
-  const setUploadedFileWrapper = (
-    action: React.SetStateAction<File | null>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(uploadedFile);
-      updateState({ uploadedFile: result });
-    } else {
-      updateState({ uploadedFile: action });
-    }
-  };
-
-  const setContentWrapper = (action: React.SetStateAction<Step3aFormData>) => {
-    if (typeof action === "function") {
-      const result = action(content);
-      updateState({ content: result });
-    } else {
-      updateState({ content: action });
-    }
-  };
-
-  const setSignatureImageWrapper = (
-    action: React.SetStateAction<string | null>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(signatureImage);
-      updateState({ signatureImage: result });
-    } else {
-      updateState({ signatureImage: action });
-    }
-  };
-
-  const setSignatureDataWrapper = (
-    action: React.SetStateAction<Step3bFormData | null>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(signatureData);
-      updateState({ signatureData: result });
-    } else {
-      updateState({ signatureData: action });
-    }
-  };
-
-  const setSignaturePositionWrapper = (
-    action: React.SetStateAction<SignaturePosition>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(signaturePosition);
-      updateState({ signaturePosition: result });
-    } else {
-      updateState({ signaturePosition: action });
-    }
-  };
-
-  const setSignatureHistoryWrapper = (
-    action: React.SetStateAction<string[]>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(signatureHistory);
-      updateState({ signatureHistory: result });
-    } else {
-      updateState({ signatureHistory: action });
-    }
-  };
-
   const handlePrevious = () => {
     if (currentStep === 3 && subStep === 2) {
-      updateState({ subStep: 1 });
+      setSubStep(1);
     } else if (currentStep > 1) {
-      updateState({ currentStep: currentStep - 1 });
+      setCurrentStep(currentStep - 1);
     }
   };
 
@@ -232,19 +191,15 @@ export default function DocumentWorkflowClient({
     reset: resetDocumentCreation,
   } = useCreateDocument({
     onSuccess: (data) => {
-      setDocumentId(data.id);
-      updateState({
-        documentCreationSuccess: true,
-        documentCreationError: null,
-      });
+      setCreatedDocumentId(data.id);
+      setDocumentCreationSuccess(true);
+      setDocumentCreationError(null);
       // Automatically proceed to step 2 after document is created
-      updateStep(2);
+      setCurrentStep(2);
     },
     onError: (error) => {
-      updateState({
-        documentCreationError: error,
-        documentCreationSuccess: false,
-      });
+      setDocumentCreationError(error);
+      setDocumentCreationSuccess(false);
     },
   });
 
@@ -257,21 +212,17 @@ export default function DocumentWorkflowClient({
     reset: resetDocumentUpdate,
   } = useUpdateDocument({
     onSuccess: (data) => {
-      updateState({
-        documentUpdateSuccess: true,
-        documentUpdateError: null,
-      });
+      setDocumentUpdateSuccess(true);
+      setDocumentUpdateError(null);
       // Only proceed to step 2 if we're on step 1
       // For step 2 and 3, navigation is handled separately
       if (currentStep === 1) {
-        updateStep(2);
+        setCurrentStep(2);
       }
     },
     onError: (error) => {
-      updateState({
-        documentUpdateError: error,
-        documentUpdateSuccess: false,
-      });
+      setDocumentUpdateError(error);
+      setDocumentUpdateSuccess(false);
     },
   });
 
@@ -282,11 +233,11 @@ export default function DocumentWorkflowClient({
   useEffect(() => {
     if (documentUpdateSuccess) {
       const timer = setTimeout(() => {
-        updateState({ documentUpdateSuccess: false });
+        setDocumentUpdateSuccess(false);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [documentUpdateSuccess, updateState]);
+  }, [documentUpdateSuccess]);
 
   const handleNext = async () => {
     // Step 1 logic
@@ -320,7 +271,7 @@ export default function DocumentWorkflowClient({
 
       // Scenario 3: Editing existing document without changes - just proceed
       if (createdDocumentId && !step1FormState?.isDirty) {
-        updateStep(2);
+        setCurrentStep(2);
         return;
       }
     }
@@ -338,12 +289,12 @@ export default function DocumentWorkflowClient({
       } else if (uploadMode === "upload") {
         // Upload mode - not implemented in this scenario
         // Just proceed to step 3
-        updateStep(3);
+        setCurrentStep(3);
         return;
       }
 
       // Proceed to Step 3
-      updateStep(3);
+      setCurrentStep(3);
       return;
     }
 
@@ -352,7 +303,8 @@ export default function DocumentWorkflowClient({
       // Auto-save content and generate PDF before proceeding to signature step
       if (createdDocumentId) {
         try {
-          updateState({ isGeneratingPdf: true, pdfGenerationError: null });
+          setIsGeneratingPdf(true);
+          setPdfGenerationError(null);
 
           // 1. Save HTML content to database
           await saveContent({
@@ -373,8 +325,8 @@ export default function DocumentWorkflowClient({
             throw new Error(errorData.message || "Failed to generate PDF");
           }
 
-          const pdfResult = await pdfResponse.json();
-          updateState({ documentPdf: pdfResult });
+          const pdfResult = (await pdfResponse.json()) as DocumentPdfResponse;
+          setDocumentPdf(pdfResult);
 
           // 3. Update document with currentPdfId and subStep = 2
           await updateDocument({
@@ -390,25 +342,25 @@ export default function DocumentWorkflowClient({
           // 3. The PDF state is already correctly set from pdfResult
         } catch (error) {
           console.error("Failed to generate PDF or save content:", error);
-          updateState({
-            pdfGenerationError:
-              error instanceof Error ? error.message : "Failed to generate PDF",
-          });
+          setPdfGenerationError(
+            error instanceof Error ? error.message : "Failed to generate PDF"
+          );
           // Still proceed even if PDF generation fails
         } finally {
-          updateState({ isGeneratingPdf: false });
+          setIsGeneratingPdf(false);
         }
       }
-      updateState({ subStep: 2 });
+      setSubStep(2);
     } else if (currentStep < 4) {
-      updateStep(currentStep + 1);
+      setCurrentStep(currentStep + 1);
     }
   };
 
   const handleSaveDraft = async () => {
     if (!createdDocumentId) return;
 
-    updateState({ isSaving: true, saveStatus: "saving" });
+    setIsSaving(true);
+    setSaveStatus("saving");
 
     try {
       // Save content with current HTML
@@ -417,20 +369,24 @@ export default function DocumentWorkflowClient({
         htmlContent: content.html,
       });
 
-      updateState({ isSaving: false, saveStatus: "saved" });
-      setTimeout(() => updateState({ saveStatus: "idle" }), 2000);
+      setIsSaving(false);
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (error) {
       console.error("Failed to save draft:", error);
-      updateState({ isSaving: false, saveStatus: "error" });
-      setTimeout(() => updateState({ saveStatus: "idle" }), 2000);
+      setIsSaving(false);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus("idle"), 2000);
     }
   };
 
   const handleSaveSignedDocument = async () => {
-    updateState({ isSaving: true, saveStatus: "saving" });
+    setIsSaving(true);
+    setSaveStatus("saving");
     // Mock save delay
     setTimeout(() => {
-      updateState({ isSaving: false, saveStatus: "saved" });
+      setIsSaving(false);
+      setSaveStatus("saved");
       router.push("/dashboard");
     }, 1500);
   };
@@ -454,7 +410,7 @@ export default function DocumentWorkflowClient({
   };
 
   // Show loading state while fetching document data
-  if (!documentDataFetched && initialDocumentId) {
+  if (isDocumentLoading) {
     return (
       <div className="min-h-screen bg-white">
         {/* Header */}
@@ -566,7 +522,7 @@ export default function DocumentWorkflowClient({
                     }
                   : undefined
               }
-              onFormStateChange={handleFormStateChange}
+              onFormStateChange={setStep1FormState}
               isCreating={isCreatingDocument}
               isUpdating={isUpdatingDocument}
               error={documentCreationError || documentUpdateError}
@@ -577,9 +533,9 @@ export default function DocumentWorkflowClient({
           {currentStep === 2 && (
             <Step2Upload
               uploadMode={uploadMode}
-              setUploadMode={setUploadModeWrapper}
+              setUploadMode={setUploadMode}
               uploadedFile={uploadedFile}
-              setUploadedFile={setUploadedFileWrapper}
+              setUploadedFile={setUploadedFile}
               documentId={createdDocumentId}
               onNext={() => handleNext()}
             />
@@ -599,7 +555,7 @@ export default function DocumentWorkflowClient({
               ) : (
                 <Step3FillContent
                   content={content}
-                  setContent={setContentWrapper}
+                  setContent={setContent}
                   documentId={createdDocumentId}
                 />
               )}
@@ -611,13 +567,13 @@ export default function DocumentWorkflowClient({
               documentId={createdDocumentId!}
               documentPdf={documentPdf}
               signatureImage={signatureImage}
-              setSignatureImage={setSignatureImageWrapper}
+              setSignatureImage={setSignatureImage}
               signatureData={signatureData}
-              setSignatureData={setSignatureDataWrapper}
+              setSignatureData={setSignatureData}
               signaturePosition={signaturePosition}
-              setSignaturePosition={setSignaturePositionWrapper}
+              setSignaturePosition={setSignaturePosition}
               signatureHistory={signatureHistory}
-              setSignatureHistory={setSignatureHistoryWrapper}
+              setSignatureHistory={setSignatureHistory}
             />
           )}
 

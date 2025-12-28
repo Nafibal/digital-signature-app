@@ -65,8 +65,10 @@ export default function Step3AddSignature({
     mode: "onBlur",
   });
 
-  // Watch all form values
-  const watchedValues = watch();
+  // Watch individual form fields for stable dependencies
+  const organization = watch("organization");
+  const signerName = watch("signerName");
+  const position = watch("position");
 
   // PDF rendering state
   const [pdfScale, setPdfScale] = useState<number>(PDF_SCALE);
@@ -77,19 +79,16 @@ export default function Step3AddSignature({
 
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const isRenderingRef = useRef(false);
 
   // Auto-generate signature when all fields are selected
   useEffect(() => {
-    if (
-      watchedValues.organization &&
-      watchedValues.signerName &&
-      watchedValues.position
-    ) {
+    if (organization && signerName && position) {
       const data: Step3bFormData = {
-        organization: watchedValues.organization,
-        signerName: watchedValues.signerName,
-        position: watchedValues.position,
+        organization,
+        signerName,
+        position,
       };
       const image = generateSignatureImage(data);
       setSignatureImage(image);
@@ -107,43 +106,108 @@ export default function Step3AddSignature({
       setSignatureImage(null);
       setSignatureData(null);
     }
-  }, [watchedValues, setSignatureImage, setSignatureData, setSignatureHistory]);
+  }, [organization, signerName, position]);
 
   // Load and render PDF when documentPdf is available
   useEffect(() => {
-    if (documentPdf) {
-      // Use setTimeout to ensure canvas is mounted to DOM
-      const timer = setTimeout(() => {
-        if (canvasRef.current) {
-          loadAndRenderPdf();
-        }
-      }, 100);
+    if (!documentPdf) return;
 
-      return () => clearTimeout(timer);
-    }
+    const checkCanvasAndRender = () => {
+      // Don't start a new render if one is already in progress
+      if (isRenderingRef.current) {
+        return false;
+      }
+
+      if (canvasRef.current) {
+        loadAndRenderPdf();
+        return true;
+      }
+      return false;
+    };
+
+    // Try immediately
+    if (checkCanvasAndRender()) return;
+
+    // If canvas not ready, use requestAnimationFrame
+    let animationFrameId: number;
+    const checkWithRAF = () => {
+      if (checkCanvasAndRender()) {
+        cancelAnimationFrame(animationFrameId);
+      } else {
+        animationFrameId = requestAnimationFrame(checkWithRAF);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(checkWithRAF);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, [documentPdf]);
 
   const loadAndRenderPdf = async () => {
-    // Capture canvas value to avoid race condition
-    const canvas = canvasRef.current;
-
-    if (!documentPdf || !canvas) {
-      console.warn("Cannot load PDF: missing documentPdf or canvas");
+    // Prevent concurrent renders
+    if (isRenderingRef.current) {
+      console.warn("Render already in progress, skipping");
       return;
     }
 
+    // Capture canvas value to avoid race condition
+    const canvas = canvasRef.current;
+
+    if (!documentPdf) {
+      const errorMsg = "PDF data not available. Please generate a PDF first.";
+      console.error(errorMsg);
+      setPdfError(errorMsg);
+      return;
+    }
+
+    if (!canvas) {
+      const errorMsg = "Canvas element not found. Please refresh the page.";
+      console.error(errorMsg);
+      setPdfError(errorMsg);
+      return;
+    }
+
+    if (!documentPdf.publicUrl) {
+      const errorMsg = "PDF URL not available. Please regenerate the PDF.";
+      console.error(errorMsg);
+      setPdfError(errorMsg);
+      return;
+    }
+
+    isRenderingRef.current = true;
     setIsPdfLoading(true);
     setPdfError(null);
 
     try {
+      console.log("Loading PDF from:", documentPdf.publicUrl);
+      console.log("Canvas ref:", canvasRef.current);
+      console.log("Container ref:", containerRef.current);
+
       const pdfDoc = await loadPdfDocument(documentPdf.publicUrl);
+      console.log("PDF document loaded successfully");
+      console.log("PDF numPages:", (pdfDoc as { numPages: number }).numPages);
+
       const scale = await renderPdfPage(pdfDoc, 1, canvas);
+      console.log("PDF rendered at scale:", scale);
+      console.log("Canvas dimensions after render:", {
+        width: canvasRef.current?.width,
+        height: canvasRef.current?.height,
+      });
       setPdfScale(scale);
     } catch (error) {
       console.error("Error loading PDF:", error);
-      setPdfError("Failed to load PDF. Please try again.");
+      const errorMsg =
+        error instanceof Error
+          ? `Failed to load PDF: ${error.message}`
+          : "Failed to load PDF. Please try again.";
+      setPdfError(errorMsg);
     } finally {
       setIsPdfLoading(false);
+      isRenderingRef.current = false;
     }
   };
 
@@ -425,7 +489,7 @@ export default function Step3AddSignature({
           <div
             ref={containerRef}
             data-signature-container="true"
-            className="relative min-h-[600px] overflow-hidden rounded-lg border border-neutral-200 bg-white"
+            className="relative min-h-[600px] rounded-lg border border-neutral-200 bg-white"
           >
             {isPdfLoading ? (
               <div className="flex h-full items-center justify-center">
@@ -437,7 +501,11 @@ export default function Step3AddSignature({
               </div>
             ) : documentPdf ? (
               <>
-                <canvas ref={canvasRef} className="w-full" />
+                <canvas
+                  ref={canvasRef}
+                  className="w-full"
+                  style={{ display: "block" }}
+                />
                 {signatureImage && (
                   <DraggableSignature
                     signatureImage={signatureImage}
