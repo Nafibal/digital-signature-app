@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import {
   SignaturePosition,
@@ -25,6 +26,8 @@ import SignatureStatus from "./step-3-add-signature/signature-status";
 import SignatureSaveButton from "./step-3-add-signature/signature-save-button";
 import PdfPreviewPanel from "./step-3-add-signature/pdf-preview-panel";
 import { useGetSignatures } from "@/lib/hooks/use-get-signatures";
+import { useSignPdf } from "@/lib/hooks/use-sign-pdf";
+import { FileSignature, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface Step3AddSignatureProps {
   documentId: string;
@@ -37,7 +40,8 @@ interface Step3AddSignatureProps {
   setSignaturePosition: React.Dispatch<React.SetStateAction<SignaturePosition>>;
   signatureHistory: string[];
   setSignatureHistory: React.Dispatch<React.SetStateAction<string[]>>;
-  onSignatureSaved?: () => void;
+  onPdfSigned?: (signedPdfUrl: string) => void;
+  onProceedToStep4?: () => void;
 }
 
 export default function Step3AddSignature({
@@ -51,7 +55,8 @@ export default function Step3AddSignature({
   setSignaturePosition,
   signatureHistory,
   setSignatureHistory,
-  onSignatureSaved,
+  onPdfSigned,
+  onProceedToStep4,
 }: Step3AddSignatureProps) {
   const {
     register,
@@ -72,8 +77,16 @@ export default function Step3AddSignature({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // PDF signing state
+  const [isSigningPdf, setIsSigningPdf] = useState<boolean>(false);
+  const [signPdfError, setSignPdfError] = useState<string | null>(null);
+  const [isPdfSigned, setIsPdfSigned] = useState<boolean>(false);
+
   // Refs
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Use sign PDF mutation
+  const { mutate: signPdf } = useSignPdf();
 
   // Auto-generate signature when all fields are selected
   useEffect(() => {
@@ -270,11 +283,6 @@ export default function Step3AddSignature({
       if (!response.ok) {
         throw new Error(result.message || "Failed to save signature");
       }
-
-      // Notify parent component
-      if (onSignatureSaved) {
-        onSignatureSaved();
-      }
     } catch (error) {
       console.error("Error saving signature:", error);
       setSaveError(
@@ -282,6 +290,66 @@ export default function Step3AddSignature({
       );
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Sign PDF with embedded signature
+  const handleSignPdf = async () => {
+    if (!signatureData || !signatureImage || !documentPdf) return;
+
+    setIsSigningPdf(true);
+    setSignPdfError(null);
+
+    try {
+      // Get canvas from container ref
+      const canvas = containerRef.current?.querySelector(
+        "canvas"
+      ) as HTMLCanvasElement | null;
+
+      if (!canvas) {
+        throw new Error("PDF canvas not found");
+      }
+
+      // Convert canvas coordinates to PDF coordinates
+      const pdfPosition = convertCanvasToPdfCoordinates(
+        { x: signaturePosition.x, y: signaturePosition.y },
+        canvas,
+        pdfScale,
+        { width: SIGNATURE_IMAGE_WIDTH, height: SIGNATURE_IMAGE_HEIGHT }
+      );
+
+      // Sign PDF with embedded signature
+      await signPdf({
+        documentId,
+        documentPdfId: documentPdf.id,
+        signatureImage,
+        position: {
+          x: pdfPosition.x,
+          y: pdfPosition.y,
+          width: SIGNATURE_IMAGE_WIDTH,
+          height: SIGNATURE_IMAGE_HEIGHT,
+        },
+      });
+
+      // Update state to show PDF is signed
+      setIsPdfSigned(true);
+
+      // Note: The signed PDF URL will be updated via the onSuccess callback in the hook
+      // which invalidates document queries and triggers a refetch
+
+      // Auto-proceed to Step 4 after short delay
+      setTimeout(() => {
+        if (onProceedToStep4) {
+          onProceedToStep4();
+        }
+      }, 1500);
+    } catch (error) {
+      console.error("Error signing PDF:", error);
+      setSignPdfError(
+        error instanceof Error ? error.message : "Failed to sign PDF"
+      );
+    } finally {
+      setIsSigningPdf(false);
     }
   };
 
@@ -335,6 +403,85 @@ export default function Step3AddSignature({
             onSave={handleSaveSignature}
             saveError={saveError}
           />
+
+          {/* PDF Signing Section */}
+          {signatureImage && (
+            <div className="space-y-4">
+              {/* Sign PDF Button */}
+              <Button
+                type="button"
+                onClick={handleSignPdf}
+                disabled={isSigningPdf || isPdfSigned}
+                className="w-full"
+                size="lg"
+              >
+                {isSigningPdf ? (
+                  <>
+                    <svg
+                      className="mr-2 h-5 w-5 animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Signing PDF...
+                  </>
+                ) : isPdfSigned ? (
+                  <>
+                    <CheckCircle2 className="mr-2 h-5 w-5" />
+                    PDF Signed
+                  </>
+                ) : (
+                  <>
+                    <FileSignature className="mr-2 h-5 w-5" />
+                    Sign PDF
+                  </>
+                )}
+              </Button>
+
+              {/* Success Message */}
+              {isPdfSigned && !isSigningPdf && (
+                <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-800 dark:bg-green-900 dark:text-green-100">
+                  <CheckCircle2 className="h-6 w-6 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">
+                      PDF Signed Successfully!
+                    </p>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      Your document has been signed and is ready for final
+                      review. Proceeding to Step 4...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {signPdfError && (
+                <div className="flex items-start gap-2 rounded-lg bg-red-50 p-4 text-red-800 dark:bg-red-950 dark:text-red-100">
+                  <AlertCircle className="h-6 w-6 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">Failed to Sign PDF</p>
+                    <p className="text-xs text-red-600 dark:text-red-300">
+                      {signPdfError}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

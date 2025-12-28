@@ -53,9 +53,11 @@ export function useWorkflowValidators(
         ? validateStep3aFormData(state.content)
         : false;
 
-    // Step 3b: Check if signature is created
+    // Step 3b: Check if signature is created and PDF is signed
     const isStep3bValid =
-      state.signatureImage !== null && state.signatureData !== null;
+      state.signatureImage !== null &&
+      state.signatureData !== null &&
+      state.isPdfSigned === true;
 
     // Determine if user can proceed to next step based on current step
     const canProceed = () => {
@@ -80,6 +82,7 @@ export function useWorkflowValidators(
     state.content,
     state.signatureImage,
     state.signatureData,
+    state.isPdfSigned,
     state.currentStep,
     state.subStep,
   ]);

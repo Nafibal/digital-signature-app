@@ -56,6 +56,7 @@ export interface DocumentWorkflowState {
   signatureData: Step3bFormData | null;
   signaturePosition: SignaturePosition;
   signatureHistory: string[];
+  isPdfSigned: boolean;
 
   // Step 4 state
   finalPdfUrl: string;

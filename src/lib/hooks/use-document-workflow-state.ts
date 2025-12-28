@@ -63,6 +63,7 @@ export function useDocumentWorkflowState({
     signatureData: null,
     signaturePosition: { x: 0, y: 0, page: 1 },
     signatureHistory: [],
+    isPdfSigned: false,
 
     // Step 4 state
     finalPdfUrl: "",

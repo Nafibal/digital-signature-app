@@ -340,6 +340,17 @@ export default function DocumentWorkflowClient({
     handler.handlePrevious();
   }, [stepHandler]);
 
+  const handlePdfSigned = useCallback(
+    (signedPdfUrl: string) => {
+      updateState({ finalPdfUrl: signedPdfUrl, isPdfSigned: true });
+    },
+    [updateState]
+  );
+
+  const handleProceedToStep4 = useCallback(() => {
+    updateStep(4);
+  }, [updateStep]);
+
   const handleSaveDraft = useCallback(async () => {
     if (!state.createdDocumentId) return;
 
@@ -470,6 +481,8 @@ export default function DocumentWorkflowClient({
               setSignaturePosition={setSignaturePositionWrapper}
               signatureHistory={signatureHistory}
               setSignatureHistory={setSignatureHistoryWrapper}
+              onPdfSigned={handlePdfSigned}
+              onProceedToStep4={handleProceedToStep4}
             />
           )}
 
