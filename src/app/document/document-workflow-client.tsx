@@ -25,6 +25,7 @@ import { useGetContent } from "@/lib/hooks/use-get-content";
 import { useDocumentWorkflowState } from "@/lib/hooks/use-document-workflow-state";
 import { useUpdateDocument } from "@/lib/hooks/use-update-document";
 import { useSaveContent } from "@/lib/hooks/use-save-content";
+import { useWorkflowValidators } from "@/lib/utils/workflow-validators";
 
 type Session = typeof import("@/lib/auth").auth.$Infer.Session;
 
@@ -87,20 +88,14 @@ export default function DocumentWorkflowClient({
 
   // Initialize content from fetched document content
   useEffect(() => {
-    if (contentData?.content) {
-      const fetchedContent = contentData.content;
-      if (
-        fetchedContent.htmlContent &&
-        content.html === "<p>Start typing your document...</p>"
-      ) {
-        updateState({
-          content: {
-            html: fetchedContent.htmlContent,
-          },
-        });
-      }
+    if (contentData?.content?.htmlContent) {
+      updateState({
+        content: {
+          html: contentData.content.htmlContent,
+        },
+      });
     }
-  }, [contentData, content.html, updateState]);
+  }, [contentData, updateState]);
 
   // Initialize PDF data from fetched document
   useEffect(() => {
@@ -110,8 +105,8 @@ export default function DocumentWorkflowClient({
     // 3. The document has a currentPdfId set (PDF was already generated)
     if (
       documentDataFetched?.currentPdf &&
-      !documentPdf &&
-      documentDataFetched.currentPdfId
+      documentDataFetched.currentPdfId &&
+      !state.documentPdf
     ) {
       updateState({
         documentPdf: documentDataFetched.currentPdf as {
@@ -128,7 +123,7 @@ export default function DocumentWorkflowClient({
         },
       });
     }
-  }, [documentDataFetched?.currentPdf, documentPdf, updateState]);
+  }, [documentDataFetched, state.documentPdf, updateState]);
 
   const handleSignOut = async () => {
     router.push("/login");
@@ -215,13 +210,13 @@ export default function DocumentWorkflowClient({
     }
   };
 
-  const handlePrevious = () => {
-    if (currentStep === 3 && subStep === 2) {
+  const handlePrevious = useCallback(() => {
+    if (state.currentStep === 3 && state.subStep === 2) {
       updateState({ subStep: 1 });
-    } else if (currentStep > 1) {
-      updateState({ currentStep: currentStep - 1 });
+    } else if (state.currentStep > 1) {
+      updateState({ currentStep: state.currentStep - 1 });
     }
-  };
+  }, [state.currentStep, state.subStep, updateState]);
 
   // Use the create document mutation
   const {
@@ -288,13 +283,13 @@ export default function DocumentWorkflowClient({
     }
   }, [documentUpdateSuccess, updateState]);
 
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     // Step 1 logic
-    if (currentStep === 1) {
+    if (state.currentStep === 1) {
       // Scenario 1: Creating new document
-      if (!createdDocumentId && !documentCreationSuccess) {
+      if (!state.createdDocumentId && !state.documentCreationSuccess) {
         resetDocumentCreation();
-        const currentValues = step1FormState?.getValues();
+        const currentValues = state.step1FormState?.getValues();
         if (currentValues) {
           createDocument({
             title: currentValues.title,
@@ -306,11 +301,11 @@ export default function DocumentWorkflowClient({
       }
 
       // Scenario 2: Editing existing document with changes
-      if (createdDocumentId && step1FormState?.isDirty) {
+      if (state.createdDocumentId && state.step1FormState?.isDirty) {
         resetDocumentUpdate();
-        const currentValues = step1FormState.getValues();
+        const currentValues = state.step1FormState.getValues();
         updateDocument({
-          id: createdDocumentId,
+          id: state.createdDocumentId,
           title: currentValues.title,
           description: currentValues.description,
           documentType: currentValues.documentType,
@@ -319,23 +314,23 @@ export default function DocumentWorkflowClient({
       }
 
       // Scenario 3: Editing existing document without changes - just proceed
-      if (createdDocumentId && !step1FormState?.isDirty) {
+      if (state.createdDocumentId && !state.step1FormState?.isDirty) {
         updateStep(2);
         return;
       }
     }
 
     // Step 2 logic (NEW)
-    if (currentStep === 2) {
-      if (uploadMode === "create") {
+    if (state.currentStep === 2) {
+      if (state.uploadMode === "create") {
         // Update document with create mode
         resetDocumentUpdate();
         updateDocument({
-          id: createdDocumentId!,
+          id: state.createdDocumentId!,
           sourceType: "blank",
           currentStep: 3,
         });
-      } else if (uploadMode === "upload") {
+      } else if (state.uploadMode === "upload") {
         // Upload mode - not implemented in this scenario
         // Just proceed to step 3
         updateStep(3);
@@ -348,21 +343,21 @@ export default function DocumentWorkflowClient({
     }
 
     // Normal navigation for other steps
-    if (currentStep === 3 && subStep === 1) {
+    if (state.currentStep === 3 && state.subStep === 1) {
       // Auto-save content and generate PDF before proceeding to signature step
-      if (createdDocumentId) {
+      if (state.createdDocumentId) {
         try {
           updateState({ isGeneratingPdf: true, pdfGenerationError: null });
 
           // 1. Save HTML content to database
           await saveContent({
-            documentId: createdDocumentId,
-            htmlContent: content.html,
+            documentId: state.createdDocumentId,
+            htmlContent: state.content.html,
           });
 
           // 2. Generate PDF and upload to Supabase
           const pdfResponse = await fetch(
-            `/api/documents/${createdDocumentId}/generate-pdf`,
+            `/api/documents/${state.createdDocumentId}/generate-pdf`,
             {
               method: "POST",
             }
@@ -378,7 +373,7 @@ export default function DocumentWorkflowClient({
 
           // 3. Update document with currentPdfId and subStep = 2
           await updateDocument({
-            id: createdDocumentId,
+            id: state.createdDocumentId,
             currentPdfId: pdfResult.id,
             subStep: 2,
           });
@@ -400,21 +395,36 @@ export default function DocumentWorkflowClient({
         }
       }
       updateState({ subStep: 2 });
-    } else if (currentStep < 4) {
-      updateStep(currentStep + 1);
+    } else if (state.currentStep < 4) {
+      updateStep(state.currentStep + 1);
     }
-  };
+  }, [
+    state.currentStep,
+    state.subStep,
+    state.createdDocumentId,
+    state.documentCreationSuccess,
+    state.step1FormState,
+    state.uploadMode,
+    state.content,
+    updateState,
+    updateStep,
+    resetDocumentCreation,
+    createDocument,
+    resetDocumentUpdate,
+    updateDocument,
+    saveContent,
+  ]);
 
-  const handleSaveDraft = async () => {
-    if (!createdDocumentId) return;
+  const handleSaveDraft = useCallback(async () => {
+    if (!state.createdDocumentId) return;
 
     updateState({ isSaving: true, saveStatus: "saving" });
 
     try {
       // Save content with current HTML
       await saveContent({
-        documentId: createdDocumentId,
-        htmlContent: content.html,
+        documentId: state.createdDocumentId,
+        htmlContent: state.content.html,
       });
 
       updateState({ isSaving: false, saveStatus: "saved" });
@@ -424,34 +434,20 @@ export default function DocumentWorkflowClient({
       updateState({ isSaving: false, saveStatus: "error" });
       setTimeout(() => updateState({ saveStatus: "idle" }), 2000);
     }
-  };
+  }, [state.createdDocumentId, state.content, updateState, saveContent]);
 
-  const handleSaveSignedDocument = async () => {
+  const handleSaveSignedDocument = useCallback(async () => {
     updateState({ isSaving: true, saveStatus: "saving" });
     // Mock save delay
     setTimeout(() => {
       updateState({ isSaving: false, saveStatus: "saved" });
       router.push("/dashboard");
     }, 1500);
-  };
+  }, [updateState, router]);
 
-  // Validation functions
-  const isStep1Valid = step1FormState?.getValues().title.trim() !== "" || false;
-
-  const isStep2Valid = uploadMode === "upload" ? uploadedFile !== null : true;
-
-  const isStep3aValid =
-    content && content.html ? validateStep3aFormData(content) : false;
-
-  const isStep3bValid = signatureImage !== null && signatureData !== null;
-
-  const canProceed = () => {
-    if (currentStep === 1) return isStep1Valid;
-    if (currentStep === 2) return isStep2Valid;
-    if (currentStep === 3 && subStep === 1) return isStep3aValid;
-    if (currentStep === 3 && subStep === 2) return isStep3bValid;
-    return true;
-  };
+  // Use memoized validation hook
+  const validators = useWorkflowValidators(state);
+  const { canProceed } = validators;
 
   // Show loading state while fetching document data
   if (!documentDataFetched && initialDocumentId) {
@@ -646,11 +642,11 @@ export default function DocumentWorkflowClient({
 
         {/* Navigation Controls */}
         <WorkflowNavigation
-          currentStep={currentStep}
-          subStep={subStep}
-          canProceed={canProceed()}
-          isSaving={isSaving}
-          saveStatus={saveStatus}
+          currentStep={state.currentStep}
+          subStep={state.subStep}
+          canProceed={validators.canProceed()}
+          isSaving={state.isSaving}
+          saveStatus={state.saveStatus}
           onPrevious={handlePrevious}
           onNext={handleNext}
           onSaveDraft={handleSaveDraft}

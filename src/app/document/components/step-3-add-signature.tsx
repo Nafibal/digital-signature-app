@@ -110,106 +110,28 @@ export default function Step3AddSignature({
 
   // Load and render PDF when documentPdf is available
   useEffect(() => {
-    if (!documentPdf) return;
+    if (!documentPdf || !canvasRef.current) return;
 
-    const checkCanvasAndRender = () => {
-      // Don't start a new render if one is already in progress
-      if (isRenderingRef.current) {
-        return false;
-      }
+    const renderPdf = async () => {
+      if (isRenderingRef.current) return;
+      isRenderingRef.current = true;
 
-      if (canvasRef.current) {
-        loadAndRenderPdf();
-        return true;
-      }
-      return false;
-    };
-
-    // Try immediately
-    if (checkCanvasAndRender()) return;
-
-    // If canvas not ready, use requestAnimationFrame
-    let animationFrameId: number;
-    const checkWithRAF = () => {
-      if (checkCanvasAndRender()) {
-        cancelAnimationFrame(animationFrameId);
-      } else {
-        animationFrameId = requestAnimationFrame(checkWithRAF);
+      try {
+        const pdfDoc = await loadPdfDocument(documentPdf.publicUrl);
+        const scale = await renderPdfPage(pdfDoc, 1, canvasRef.current!);
+        setPdfScale(scale);
+      } catch (error) {
+        setPdfError(
+          error instanceof Error ? error.message : "Failed to load PDF"
+        );
+      } finally {
+        isRenderingRef.current = false;
       }
     };
 
-    animationFrameId = requestAnimationFrame(checkWithRAF);
-
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
+    renderPdf();
   }, [documentPdf]);
 
-  const loadAndRenderPdf = async () => {
-    // Prevent concurrent renders
-    if (isRenderingRef.current) {
-      console.warn("Render already in progress, skipping");
-      return;
-    }
-
-    // Capture canvas value to avoid race condition
-    const canvas = canvasRef.current;
-
-    if (!documentPdf) {
-      const errorMsg = "PDF data not available. Please generate a PDF first.";
-      console.error(errorMsg);
-      setPdfError(errorMsg);
-      return;
-    }
-
-    if (!canvas) {
-      const errorMsg = "Canvas element not found. Please refresh the page.";
-      console.error(errorMsg);
-      setPdfError(errorMsg);
-      return;
-    }
-
-    if (!documentPdf.publicUrl) {
-      const errorMsg = "PDF URL not available. Please regenerate the PDF.";
-      console.error(errorMsg);
-      setPdfError(errorMsg);
-      return;
-    }
-
-    isRenderingRef.current = true;
-    setIsPdfLoading(true);
-    setPdfError(null);
-
-    try {
-      console.log("Loading PDF from:", documentPdf.publicUrl);
-      console.log("Canvas ref:", canvasRef.current);
-      console.log("Container ref:", containerRef.current);
-
-      const pdfDoc = await loadPdfDocument(documentPdf.publicUrl);
-      console.log("PDF document loaded successfully");
-      console.log("PDF numPages:", (pdfDoc as { numPages: number }).numPages);
-
-      const scale = await renderPdfPage(pdfDoc, 1, canvas);
-      console.log("PDF rendered at scale:", scale);
-      console.log("Canvas dimensions after render:", {
-        width: canvasRef.current?.width,
-        height: canvasRef.current?.height,
-      });
-      setPdfScale(scale);
-    } catch (error) {
-      console.error("Error loading PDF:", error);
-      const errorMsg =
-        error instanceof Error
-          ? `Failed to load PDF: ${error.message}`
-          : "Failed to load PDF. Please try again.";
-      setPdfError(errorMsg);
-    } finally {
-      setIsPdfLoading(false);
-      isRenderingRef.current = false;
-    }
-  };
 
   // Handle signature drag
   const handleSignatureDrag = (x: number, y: number) => {
