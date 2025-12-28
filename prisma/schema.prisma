@@ -206,8 +206,15 @@ model Signature {
   
   imagePath       String   @map("image_path")
   pageNumber      Int      @map("page_number")
+  
+  // PDF coordinates (for embedding in PDF)
   posX            Float    @map("pos_x")
   posY            Float    @map("pos_y")
+  
+  // Canvas coordinates (for display)
+  canvasPosX      Float?   @map("canvas_pos_x")
+  canvasPosY      Float?   @map("canvas_pos_y")
+  
   width           Float
   height          Float
   signerName      String   @map("signer_name")
