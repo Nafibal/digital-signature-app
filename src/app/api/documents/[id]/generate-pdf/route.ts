@@ -255,7 +255,7 @@ export async function POST(
       data: { currentPdfId: documentPdf.id },
     });
 
-    // Get public URL
+    // Get public URL from Supabase Storage
     const { data: publicUrlData } = supabase.storage
       .from("documents")
       .getPublicUrl(uploadResult.path);

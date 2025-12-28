@@ -4,6 +4,25 @@
  */
 
 /**
+ * Document content response
+ */
+export interface DocumentContent {
+  id: string;
+  documentId: string;
+  htmlContent: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Get document content response
+ */
+export interface GetDocumentContentResponse {
+  content: DocumentContent | null;
+}
+
+/**
  * Save document content
  */
 export async function saveDocumentContent(
@@ -31,7 +50,9 @@ export async function saveDocumentContent(
 /**
  * Get document content
  */
-export async function getDocumentContent(documentId: string): Promise<unknown> {
+export async function getDocumentContent(
+  documentId: string
+): Promise<GetDocumentContentResponse> {
   const response = await fetch(`/api/documents/${documentId}/content`);
 
   if (!response.ok) {

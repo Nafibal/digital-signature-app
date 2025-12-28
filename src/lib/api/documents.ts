@@ -42,6 +42,8 @@ export interface UpdateDocumentRequest {
   sourceType?: string;
   currentStep?: number;
   subStep?: number;
+  pdfPath?: string;
+  currentPdfId?: string;
 }
 
 /**
@@ -60,6 +62,18 @@ export interface UpdateDocumentResponse {
 }
 
 /**
+ * Document PDF response
+ */
+export interface DocumentPdf {
+  id: string;
+  pdfPath: string;
+  fileName: string;
+  fileSize: number;
+  pageCount?: number;
+  status: string;
+}
+
+/**
  * Get single document response
  */
 export interface GetDocumentResponse {
@@ -70,6 +84,10 @@ export interface GetDocumentResponse {
   currentStep: number;
   subStep?: number | null;
   status: DocumentStatus;
+  sourceType?: string | null;
+  pdfPath?: string | null;
+  currentPdfId?: string | null;
+  currentPdf?: DocumentPdf | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -9,33 +9,53 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, FileText } from "lucide-react";
+import { CheckCircle2, FileText, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   SignaturePosition,
   Step3bFormData,
   DEFAULT_ORGANIZATIONS,
   DocumentPdfResponse,
+  CanvasPosition,
 } from "@/lib/types/document";
+import {
+  generateSignatureImage,
+  SIGNATURE_IMAGE_WIDTH,
+  SIGNATURE_IMAGE_HEIGHT,
+} from "@/lib/utils/signature";
+import { loadPdfDocument, renderPdfPage, PDF_SCALE } from "@/lib/utils/pdf";
+import {
+  convertCanvasToPdfCoordinates,
+  clampPosition,
+} from "@/lib/utils/coordinates";
+import { DraggableSignature } from "@/components/pdf";
 
 interface Step3AddSignatureProps {
+  documentId: string;
   documentPdf: DocumentPdfResponse | null;
-  signature: string | null;
-  setSignature: React.Dispatch<React.SetStateAction<string | null>>;
+  signatureImage: string | null;
+  setSignatureImage: React.Dispatch<React.SetStateAction<string | null>>;
+  signatureData: Step3bFormData | null;
+  setSignatureData: React.Dispatch<React.SetStateAction<Step3bFormData | null>>;
   signaturePosition: SignaturePosition;
   setSignaturePosition: React.Dispatch<React.SetStateAction<SignaturePosition>>;
   signatureHistory: string[];
   setSignatureHistory: React.Dispatch<React.SetStateAction<string[]>>;
+  onSignatureSaved?: () => void;
 }
 
 export default function Step3AddSignature({
+  documentId,
   documentPdf,
-  signature,
-  setSignature,
+  signatureImage,
+  setSignatureImage,
+  signatureData,
+  setSignatureData,
   signaturePosition,
   setSignaturePosition,
   signatureHistory,
   setSignatureHistory,
+  onSignatureSaved,
 }: Step3AddSignatureProps) {
   const {
     register,
@@ -48,6 +68,17 @@ export default function Step3AddSignature({
   // Watch all form values
   const watchedValues = watch();
 
+  // PDF rendering state
+  const [pdfScale, setPdfScale] = useState<number>(PDF_SCALE);
+  const [isPdfLoading, setIsPdfLoading] = useState<boolean>(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Refs
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // Auto-generate signature when all fields are selected
   useEffect(() => {
     if (
@@ -55,63 +86,150 @@ export default function Step3AddSignature({
       watchedValues.signerName &&
       watchedValues.position
     ) {
-      const signatureData: Step3bFormData = {
+      const data: Step3bFormData = {
         organization: watchedValues.organization,
         signerName: watchedValues.signerName,
         position: watchedValues.position,
       };
-      const signatureJson = JSON.stringify(signatureData);
-
-      // Only update if signature is different (prevent unnecessary re-renders)
-      if (signature !== signatureJson) {
-        setSignature(signatureJson);
-      }
+      const image = generateSignatureImage(data);
+      setSignatureImage(image);
+      setSignatureData(data);
 
       // Only add to history if it's a new signature (not same as last one)
       setSignatureHistory((prev) => {
         const lastSignature = prev[prev.length - 1];
-        if (lastSignature !== signatureJson) {
-          return [...prev, signatureJson];
+        if (lastSignature !== JSON.stringify(data)) {
+          return [...prev, JSON.stringify(data)];
         }
         return prev;
       });
     } else {
-      // Only clear if there's currently a signature
-      if (signature !== null) {
-        setSignature(null);
-      }
+      setSignatureImage(null);
+      setSignatureData(null);
     }
-  }, [watchedValues, setSignature, setSignatureHistory, signature]);
+  }, [watchedValues, setSignatureImage, setSignatureData, setSignatureHistory]);
 
-  // Parse signature data for display
-  const getSignatureData = (): Step3bFormData | null => {
-    if (!signature) return null;
+  // Load and render PDF when documentPdf is available
+  useEffect(() => {
+    if (documentPdf) {
+      // Use setTimeout to ensure canvas is mounted to DOM
+      const timer = setTimeout(() => {
+        if (canvasRef.current) {
+          loadAndRenderPdf();
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [documentPdf]);
+
+  const loadAndRenderPdf = async () => {
+    // Capture canvas value to avoid race condition
+    const canvas = canvasRef.current;
+
+    if (!documentPdf || !canvas) {
+      console.warn("Cannot load PDF: missing documentPdf or canvas");
+      return;
+    }
+
+    setIsPdfLoading(true);
+    setPdfError(null);
+
     try {
-      return JSON.parse(signature) as Step3bFormData;
-    } catch {
-      return null;
+      const pdfDoc = await loadPdfDocument(documentPdf.publicUrl);
+      const scale = await renderPdfPage(pdfDoc, 1, canvas);
+      setPdfScale(scale);
+    } catch (error) {
+      console.error("Error loading PDF:", error);
+      setPdfError("Failed to load PDF. Please try again.");
+    } finally {
+      setIsPdfLoading(false);
     }
   };
 
-  const signatureData = getSignatureData();
+  // Handle signature drag
+  const handleSignatureDrag = (x: number, y: number) => {
+    if (!containerRef.current) return;
 
-  // Generate visual text signature
-  const getVisualSignature = (): string => {
-    if (!signatureData) return "";
-    return `${signatureData.signerName} - ${signatureData.position} - ${signatureData.organization}`;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const clampedPosition = clampPosition(
+      { x, y },
+      containerRect.width,
+      containerRect.height,
+      SIGNATURE_IMAGE_WIDTH,
+      SIGNATURE_IMAGE_HEIGHT
+    );
+
+    setSignaturePosition({
+      x: clampedPosition.x,
+      y: clampedPosition.y,
+      page: 1,
+    });
   };
 
   // Clear form
   const clearSignature = () => {
-    setSignature(null);
+    setSignatureImage(null);
+    setSignatureData(null);
   };
 
-  // Mock signature placement on PDF
-  const handlePdfClick = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setSignaturePosition({ x, y, page: 1 });
+  // Save signature to database
+  const handleSaveSignature = async () => {
+    if (!signatureData || !signatureImage || !documentPdf) return;
+
+    // Capture canvas value to avoid race condition
+    const canvas = canvasRef.current;
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      // Convert canvas coordinates to PDF coordinates
+      if (!canvas) {
+        throw new Error("PDF canvas not found");
+      }
+
+      const pdfPosition = convertCanvasToPdfCoordinates(
+        { x: signaturePosition.x, y: signaturePosition.y },
+        canvas,
+        pdfScale,
+        { width: SIGNATURE_IMAGE_WIDTH, height: SIGNATURE_IMAGE_HEIGHT }
+      );
+
+      const response = await fetch(`/api/documents/${documentId}/signature`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentId,
+          documentPdfId: documentPdf.id,
+          signatureData,
+          signaturePosition: {
+            x: pdfPosition.x,
+            y: pdfPosition.y,
+            page: signaturePosition.page,
+          },
+          signatureImage,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to save signature");
+      }
+
+      // Notify parent component
+      if (onSignatureSaved) {
+        onSignatureSaved();
+      }
+    } catch (error) {
+      console.error("Error saving signature:", error);
+      setSaveError(
+        error instanceof Error ? error.message : "Failed to save signature"
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -222,7 +340,7 @@ export default function Step3AddSignature({
               variant="outline"
               size="sm"
               onClick={clearSignature}
-              disabled={!signature}
+              disabled={!signatureImage}
               className="w-full"
             >
               Clear Form
@@ -230,33 +348,38 @@ export default function Step3AddSignature({
           </div>
 
           {/* Signature Preview */}
-          {signatureData && (
+          {signatureData && signatureImage && (
             <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
               <p className="mb-2 text-sm font-medium text-neutral-700">
                 Signature Preview:
               </p>
-              <p className="text-sm font-semibold text-neutral-900">
-                {getVisualSignature()}
-              </p>
+              <img
+                src={signatureImage}
+                alt="Signature preview"
+                className="w-full rounded border border-neutral-300"
+              />
             </div>
           )}
 
           {/* Signature Status */}
           <div
             className={`flex items-center gap-3 rounded-lg border p-4 ${
-              signature
+              signatureImage
                 ? "border-green-200 bg-green-50 text-green-800"
                 : "border-neutral-200 bg-neutral-50 text-neutral-600"
             }`}
           >
-            {signature ? (
+            {signatureImage ? (
               <CheckCircle2 className="h-5 w-5 text-green-600" />
             ) : (
               <div className="h-5 w-5 rounded-full border-2 border-neutral-300" />
             )}
             <div className="text-sm">
-              {signature ? (
-                <span>Signature created. You can proceed to final review.</span>
+              {signatureImage ? (
+                <span>
+                  Signature created. Drag it to position on the PDF, then click
+                  Save Signature.
+                </span>
               ) : (
                 <span>
                   Please fill in all three fields to create your signature.
@@ -264,6 +387,28 @@ export default function Step3AddSignature({
               )}
             </div>
           </div>
+
+          {/* Save Button */}
+          {signatureImage && (
+            <Button
+              type="button"
+              onClick={handleSaveSignature}
+              disabled={isSaving}
+              className="w-full"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Signature"
+              )}
+            </Button>
+          )}
+
+          {/* Save Error */}
+          {saveError && <p className="text-sm text-red-500">{saveError}</p>}
         </CardContent>
       </Card>
 
@@ -272,57 +417,56 @@ export default function Step3AddSignature({
         <CardHeader>
           <CardTitle>Place Signature</CardTitle>
           <CardDescription>
-            Click on document to position your signature
+            Drag signature to desired position on document
           </CardDescription>
         </CardHeader>
         <CardContent>
           {/* PDF Preview */}
-          {documentPdf ? (
-            <div
-              onClick={handlePdfClick}
-              className="relative cursor-pointer rounded-lg border border-neutral-200 bg-white overflow-hidden"
-            >
-              <iframe
-                src={documentPdf.publicUrl}
-                className="w-full min-h-[600px] border-0"
-                title="PDF Preview"
-              />
-              {/* Signature Placement Indicator - Visual Text */}
-              {signatureData && (
-                <div
-                  className="absolute border-2 border-dashed border-blue-500 bg-blue-50 px-4 py-3 pointer-events-none"
-                  style={{
-                    left: `${signaturePosition.x}px`,
-                    top: `${signaturePosition.y}px`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                >
-                  <p className="text-sm font-semibold text-neutral-900">
-                    {signatureData.signerName}
-                  </p>
-                  <p className="text-xs text-neutral-600">
-                    {signatureData.position}
-                  </p>
-                  <p className="text-xs text-neutral-600">
-                    {signatureData.organization}
+          <div
+            ref={containerRef}
+            data-signature-container="true"
+            className="relative min-h-[600px] overflow-hidden rounded-lg border border-neutral-200 bg-white"
+          >
+            {isPdfLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
+              </div>
+            ) : pdfError ? (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-sm text-red-500">{pdfError}</p>
+              </div>
+            ) : documentPdf ? (
+              <>
+                <canvas ref={canvasRef} className="w-full" />
+                {signatureImage && (
+                  <DraggableSignature
+                    signatureImage={signatureImage}
+                    position={{
+                      x: signaturePosition.x,
+                      y: signaturePosition.y,
+                    }}
+                    onDrag={handleSignatureDrag}
+                    containerRef={containerRef}
+                    width={SIGNATURE_IMAGE_WIDTH}
+                    height={SIGNATURE_IMAGE_HEIGHT}
+                  />
+                )}
+              </>
+            ) : (
+              <div className="flex h-full items-center justify-center gap-3 text-neutral-400">
+                <FileText className="h-12 w-12" />
+                <div className="text-sm">
+                  <p className="font-medium">No PDF Available</p>
+                  <p className="text-xs">
+                    PDF will be generated when you proceed from step 3.1
                   </p>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-3 text-neutral-400 rounded-lg border border-neutral-200 bg-white p-8 shadow-sm">
-              <FileText className="h-12 w-12" />
-              <div className="text-sm">
-                <p className="font-medium">No PDF Available</p>
-                <p className="text-xs">
-                  PDF will be generated when you proceed from step 3.1
-                </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Position Info */}
-          {signature && (
+          {signatureImage && (
             <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
               <p className="text-sm text-neutral-600">
                 <span className="font-medium">Position:</span> X:{" "}

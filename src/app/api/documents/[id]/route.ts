@@ -2,6 +2,17 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
+
+/**
+ * Helper function to generate public URL from PDF path
+ * Uses Supabase Storage public URL (bucket is now public)
+ */
+function getPublicUrl(pdfPath: string | null): string | null {
+  if (!pdfPath) return null;
+  const { data } = supabase.storage.from("documents").getPublicUrl(pdfPath);
+  return data.publicUrl;
+}
 
 export async function GET(
   req: Request,
@@ -59,8 +70,19 @@ export async function GET(
       );
     }
 
+    // Transform response to include public URL
+    const response = {
+      ...document,
+      currentPdf: document.currentPdf
+        ? {
+            ...document.currentPdf,
+            publicUrl: getPublicUrl(document.currentPdf.pdfPath),
+          }
+        : null,
+    };
+
     // Response
-    return NextResponse.json(document, { status: 200 });
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error("[GET /api/documents/[id]]", error);
     return NextResponse.json(
@@ -157,8 +179,19 @@ export async function PATCH(
       },
     });
 
+    // Transform response to include public URL
+    const response = {
+      ...updatedDocument,
+      currentPdf: updatedDocument.currentPdf
+        ? {
+            ...updatedDocument.currentPdf,
+            publicUrl: getPublicUrl(updatedDocument.currentPdf.pdfPath),
+          }
+        : null,
+    };
+
     // Response
-    return NextResponse.json(updatedDocument, { status: 200 });
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error("[PATCH /api/documents/[id]]", error);
     return NextResponse.json(

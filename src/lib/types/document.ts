@@ -263,6 +263,41 @@ export interface PDFPreviewResponse {
 }
 
 /**
+ * Signature Image Data
+ * Base64 PNG data URL for signature image
+ */
+export type SignatureImage = string;
+
+/**
+ * PDF Position
+ * Coordinates for embedding signature in PDF
+ */
+export interface PdfPosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Canvas Position
+ * Coordinates for signature on canvas preview
+ */
+export interface CanvasPosition {
+  x: number;
+  y: number;
+}
+
+/**
+ * Signature Size
+ * Dimensions of signature image
+ */
+export interface SignatureSize {
+  width: number;
+  height: number;
+}
+
+/**
  * Document PDF Response
  * Response from /api/documents/[id]/generate-pdf
  */

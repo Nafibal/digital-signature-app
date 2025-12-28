@@ -38,16 +38,16 @@ export default function DocumentWorkflowClient({
   const router = useRouter();
   const user = session.user;
 
-  // Fetch document data if editing an existing document
-  const { data: documentDataFetched, isLoading: isDocumentLoading } =
-    useGetDocument(documentId);
-
   // State management
   const [currentStep, setCurrentStep] = useState(1);
   const [subStep, setSubStep] = useState(1); // 1 or 2 for Step 3
   const [createdDocumentId, setCreatedDocumentId] = useState<string | null>(
     documentId || null
   );
+
+  // Fetch document data if editing an existing document
+  const { data: documentDataFetched, isLoading: isDocumentLoading } =
+    useGetDocument(createdDocumentId || documentId);
   const [documentCreationError, setDocumentCreationError] =
     useState<Error | null>(null);
   const [documentCreationSuccess, setDocumentCreationSuccess] = useState(false);
@@ -81,7 +81,10 @@ export default function DocumentWorkflowClient({
   );
 
   // Step 3.2: Add Signature
-  const [signature, setSignature] = useState<string | null>(null);
+  const [signatureImage, setSignatureImage] = useState<string | null>(null);
+  const [signatureData, setSignatureData] = useState<Step3bFormData | null>(
+    null
+  );
   const [signaturePosition, setSignaturePosition] = useState<SignaturePosition>(
     {
       x: 0,
@@ -106,7 +109,7 @@ export default function DocumentWorkflowClient({
 
   // Fetch document content
   const { data: contentData, isLoading: isContentLoading } = useGetContent(
-    documentId || createdDocumentId
+    createdDocumentId || documentId || null
   );
 
   // Initialize state from fetched document data (only on first load)
@@ -379,7 +382,7 @@ export default function DocumentWorkflowClient({
   const isStep3aValid =
     content && content.html ? validateStep3aFormData(content) : false;
 
-  const isStep3bValid = signature !== null;
+  const isStep3bValid = signatureImage !== null && signatureData !== null;
 
   const canProceed = () => {
     if (currentStep === 1) return isStep1Valid;
@@ -544,9 +547,12 @@ export default function DocumentWorkflowClient({
 
           {currentStep === 3 && subStep === 2 && (
             <Step3AddSignature
+              documentId={createdDocumentId!}
               documentPdf={documentPdf}
-              signature={signature}
-              setSignature={setSignature}
+              signatureImage={signatureImage}
+              setSignatureImage={setSignatureImage}
+              signatureData={signatureData}
+              setSignatureData={setSignatureData}
               signaturePosition={signaturePosition}
               setSignaturePosition={setSignaturePosition}
               signatureHistory={signatureHistory}
@@ -570,7 +576,7 @@ export default function DocumentWorkflowClient({
                       documentType: "contract",
                     }
               }
-              signature={signature}
+              signature={signatureImage}
               signaturePosition={signaturePosition}
               finalPdfUrl={finalPdfUrl}
             />
