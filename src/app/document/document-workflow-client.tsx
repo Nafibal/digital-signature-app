@@ -28,6 +28,7 @@ import { useDocumentWorkflowState } from "@/lib/hooks/use-document-workflow-stat
 import { useUpdateDocument } from "@/lib/hooks/use-update-document";
 import { useSaveContent } from "@/lib/hooks/use-save-content";
 import { useWorkflowValidators } from "@/lib/utils/workflow-validators";
+import { createStepHandler } from "@/lib/workflow/step-handlers";
 
 type Session = typeof import("@/lib/auth").auth.$Infer.Session;
 
@@ -212,14 +213,6 @@ export default function DocumentWorkflowClient({
     }
   };
 
-  const handlePrevious = useCallback(() => {
-    if (state.currentStep === 3 && state.subStep === 2) {
-      updateState({ subStep: 1 });
-    } else if (state.currentStep > 1) {
-      updateState({ currentStep: state.currentStep - 1 });
-    }
-  }, [state.currentStep, state.subStep, updateState]);
-
   // Use the create document mutation
   const {
     mutate: createDocument,
@@ -285,137 +278,39 @@ export default function DocumentWorkflowClient({
     }
   }, [documentUpdateSuccess, updateState]);
 
-  const handleNext = useCallback(async () => {
-    // Step 1 logic
-    if (state.currentStep === 1) {
-      // Scenario 1: Creating new document
-      if (!state.createdDocumentId && !state.documentCreationSuccess) {
-        resetDocumentCreation();
-        const currentValues = state.step1FormState?.getValues();
-        if (currentValues) {
-          createDocument({
-            title: currentValues.title,
-            description: currentValues.description,
-            documentType: currentValues.documentType,
-          });
-        }
-        return;
-      }
-
-      // Scenario 2: Editing existing document with changes
-      if (state.createdDocumentId && state.step1FormState?.isDirty) {
-        resetDocumentUpdate();
-        const currentValues = state.step1FormState.getValues();
-        updateDocument({
-          id: state.createdDocumentId,
-          title: currentValues.title,
-          description: currentValues.description,
-          documentType: currentValues.documentType,
-        });
-        return;
-      }
-
-      // Scenario 3: Editing existing document without changes - just proceed
-      if (state.createdDocumentId && !state.step1FormState?.isDirty) {
-        updateStep(2);
-        return;
-      }
-    }
-
-    // Step 2 logic (NEW)
-    if (state.currentStep === 2) {
-      if (state.uploadMode === "create") {
-        // Update document with create mode
-        resetDocumentUpdate();
-        updateDocument({
-          id: state.createdDocumentId!,
-          sourceType: "blank",
-          currentStep: 3,
-        });
-      } else if (state.uploadMode === "upload") {
-        // Upload mode - not implemented in this scenario
-        // Just proceed to step 3
-        updateStep(3);
-        return;
-      }
-
-      // Proceed to Step 3
-      updateStep(3);
-      return;
-    }
-
-    // Normal navigation for other steps
-    if (state.currentStep === 3 && state.subStep === 1) {
-      // Auto-save content and generate PDF before proceeding to signature step
-      if (state.createdDocumentId) {
-        try {
-          updateState({ isGeneratingPdf: true, pdfGenerationError: null });
-
-          // 1. Save HTML content to database
-          await saveContent({
-            documentId: state.createdDocumentId,
-            htmlContent: state.content.html,
-          });
-
-          // 2. Generate PDF and upload to Supabase
-          const pdfResponse = await fetch(
-            `/api/documents/${state.createdDocumentId}/generate-pdf`,
-            {
-              method: "POST",
-            }
-          );
-
-          if (!pdfResponse.ok) {
-            const errorData = await pdfResponse.json();
-            throw new Error(errorData.message || "Failed to generate PDF");
-          }
-
-          const pdfResult = await pdfResponse.json();
-          updateState({ documentPdf: pdfResult });
-
-          // 3. Update document with currentPdfId and subStep = 2
-          await updateDocument({
-            id: state.createdDocumentId,
-            currentPdfId: pdfResult.id,
-            subStep: 2,
-          });
-
-          // NOTE: We don't need to invalidate the query here because:
-          // 1. We already have complete PDF data from the generation API (pdfResult)
-          // 2. Invalidating the query causes a race condition where it refetches before
-          //    the database update completes, resulting in currentPdf being null
-          // 3. The PDF state is already correctly set from pdfResult
-        } catch (error) {
-          console.error("Failed to generate PDF or save content:", error);
-          updateState({
-            pdfGenerationError:
-              error instanceof Error ? error.message : "Failed to generate PDF",
-          });
-          // Still proceed even if PDF generation fails
-        } finally {
-          updateState({ isGeneratingPdf: false });
-        }
-      }
-      updateState({ subStep: 2 });
-    } else if (state.currentStep < 4) {
-      updateStep(state.currentStep + 1);
-    }
+  // Create step handler with all dependencies
+  const stepHandler = useCallback(() => {
+    return createStepHandler(state, {
+      updateState,
+      updateStep,
+      createDocument,
+      updateDocument,
+      saveContent,
+      resetDocumentCreation,
+      resetDocumentUpdate,
+    });
   }, [
-    state.currentStep,
-    state.subStep,
-    state.createdDocumentId,
-    state.documentCreationSuccess,
-    state.step1FormState,
-    state.uploadMode,
-    state.content,
+    state,
     updateState,
     updateStep,
-    resetDocumentCreation,
     createDocument,
-    resetDocumentUpdate,
     updateDocument,
     saveContent,
+    resetDocumentCreation,
+    resetDocumentUpdate,
   ]);
+
+  // Simplified handleNext using step handler
+  const handleNext = useCallback(async () => {
+    const handler = stepHandler();
+    await handler.handleNext();
+  }, [stepHandler]);
+
+  // Simplified handlePrevious using step handler
+  const handlePrevious = useCallback(() => {
+    const handler = stepHandler();
+    handler.handlePrevious();
+  }, [stepHandler]);
 
   const handleSaveDraft = useCallback(async () => {
     if (!state.createdDocumentId) return;
