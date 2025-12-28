@@ -115,11 +115,6 @@ export function useDocumentWorkflowState({
     setState((prev) => {
       const newState = { ...prev, ...updates };
 
-      // Optional: Log state changes in development
-      if (process.env.NODE_ENV === "development") {
-        console.log("[Workflow State Updated]", updates, newState);
-      }
-
       return newState;
     });
   }, []);

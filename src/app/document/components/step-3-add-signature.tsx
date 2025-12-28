@@ -16,6 +16,7 @@ import {
 import { PDF_SCALE } from "@/lib/utils/pdf";
 import {
   convertCanvasToPdfCoordinates,
+  convertPdfToCanvasCoordinates,
   clampPosition,
 } from "@/lib/utils/coordinates";
 import SignatureForm from "./step-3-add-signature/signature-form";
@@ -23,6 +24,7 @@ import SignaturePreview from "./step-3-add-signature/signature-preview";
 import SignatureStatus from "./step-3-add-signature/signature-status";
 import SignatureSaveButton from "./step-3-add-signature/signature-save-button";
 import PdfPreviewPanel from "./step-3-add-signature/pdf-preview-panel";
+import { useGetSignatures } from "@/lib/hooks/use-get-signatures";
 
 interface Step3AddSignatureProps {
   documentId: string;
@@ -54,6 +56,7 @@ export default function Step3AddSignature({
   const {
     register,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<Step3bFormData>({
     mode: "onBlur",
@@ -104,6 +107,91 @@ export default function Step3AddSignature({
     setSignatureData,
     setSignatureHistory,
   ]);
+
+  // Fetch existing signatures
+  const { data: signatures, isLoading: isLoadingSignatures } = useGetSignatures(
+    {
+      documentId,
+    }
+  );
+
+  // Load most recent signature when component mounts or signatures change
+  useEffect(() => {
+    // Only load signature if:
+    // 1. We have signatures data
+    // 2. We don't already have signature data (this is initial load)
+    // 3. Signatures array is not empty
+    if (
+      signatures &&
+      signatures.length > 0 &&
+      !signatureData &&
+      !signatureImage
+    ) {
+      const mostRecentSignature = signatures[0]; // Most recent is first in array
+
+      // Populate form fields with signature data
+      setValue("organization", mostRecentSignature.organization || "");
+      setValue("signerName", mostRecentSignature.signerName);
+      setValue("position", mostRecentSignature.signerPosition || "");
+
+      // Set signature data and image
+      const loadedSignatureData: Step3bFormData = {
+        organization: mostRecentSignature.organization || "",
+        signerName: mostRecentSignature.signerName,
+        position: mostRecentSignature.signerPosition || "",
+      };
+      setSignatureData(loadedSignatureData);
+      setSignatureImage(mostRecentSignature.publicUrl);
+
+      // Use canvas coordinates directly if available (no conversion needed)
+      if (
+        mostRecentSignature.canvasPosX !== null &&
+        mostRecentSignature.canvasPosY !== null
+      ) {
+        setSignaturePosition({
+          x: mostRecentSignature.canvasPosX,
+          y: mostRecentSignature.canvasPosY,
+          page: mostRecentSignature.pageNumber,
+        });
+      } else {
+        // Fallback: Convert PDF coordinates to canvas coordinates
+        // (for existing signatures that don't have canvas coordinates)
+        if (containerRef.current) {
+          const canvas = containerRef.current.querySelector(
+            "canvas"
+          ) as HTMLCanvasElement | null;
+
+          if (canvas) {
+            try {
+              const canvasPosition = convertPdfToCanvasCoordinates(
+                {
+                  x: mostRecentSignature.posX,
+                  y: mostRecentSignature.posY,
+                  width: mostRecentSignature.width,
+                  height: mostRecentSignature.height,
+                },
+                canvas,
+                pdfScale
+              );
+
+              setSignaturePosition({
+                x: canvasPosition.x,
+                y: canvasPosition.y,
+                page: mostRecentSignature.pageNumber,
+              });
+            } catch (error) {
+              console.error(
+                "Error converting PDF coordinates to canvas:",
+                error
+              );
+              // Set default position if conversion fails
+              setSignaturePosition({ x: 0, y: 0, page: 1 });
+            }
+          }
+        }
+      }
+    }
+  }, [signatures, signatureData, signatureImage, setValue, pdfScale]);
 
   // Handle signature drag
   const handleSignatureDrag = (x: number, y: number) => {
@@ -164,9 +252,14 @@ export default function Step3AddSignature({
           documentPdfId: documentPdf.id,
           signatureData,
           signaturePosition: {
-            x: pdfPosition.x,
-            y: pdfPosition.y,
+            x: pdfPosition.x, // PDF coordinates for embedding
+            y: pdfPosition.y, // PDF coordinates for embedding
             page: signaturePosition.page,
+          },
+          canvasPosition: {
+            // Canvas coordinates for display
+            x: signaturePosition.x,
+            y: signaturePosition.y,
           },
           signatureImage,
         }),
@@ -199,6 +292,31 @@ export default function Step3AddSignature({
           <CardTitle>Create Signature</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {isLoadingSignatures && (
+            <div className="flex items-center justify-center py-8 text-neutral-500">
+              <svg
+                className="animate-spin h-6 w-6 mr-2"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Loading signature...
+            </div>
+          )}
           <SignatureForm
             register={register}
             errors={errors}
