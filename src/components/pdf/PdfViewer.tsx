@@ -44,13 +44,17 @@ export default function PdfViewer({ url, scale = 1.5 }: PdfViewerProps) {
         setNumPages(pdf.numPages);
 
         const page = await pdf.getPage(currentPage);
+        console.log("PDF page loaded:", page);
         const viewport = page.getViewport({ scale });
+        console.log("PDF viewport:", viewport);
 
         const canvas = canvasRef.current!;
         const context = canvas.getContext("2d")!;
 
         canvas.width = viewport.width;
         canvas.height = viewport.height;
+
+        console.log("Canvas:", canvas);
 
         await page.render({
           canvasContext: context,

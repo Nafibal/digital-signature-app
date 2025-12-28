@@ -7,7 +7,7 @@ interface DraggableSignatureProps {
   signatureImage: string;
   position: CanvasPosition;
   onDrag: (x: number, y: number) => void;
-  containerRef: RefObject<HTMLDivElement>;
+  containerRef: RefObject<HTMLDivElement | null>;
   width?: number;
   height?: number;
 }

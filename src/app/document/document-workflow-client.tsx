@@ -169,49 +169,53 @@ export default function DocumentWorkflowClient({
     }
   };
 
-  const setSignatureImageWrapper = (
-    action: React.SetStateAction<string | null>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(signatureImage);
-      updateState({ signatureImage: result });
-    } else {
-      updateState({ signatureImage: action });
-    }
-  };
+  const setSignatureImageWrapper = useCallback(
+    (action: React.SetStateAction<string | null>) => {
+      if (typeof action === "function") {
+        const result = action(signatureImage);
+        updateState({ signatureImage: result });
+      } else {
+        updateState({ signatureImage: action });
+      }
+    },
+    [signatureImage, updateState]
+  );
 
-  const setSignatureDataWrapper = (
-    action: React.SetStateAction<Step3bFormData | null>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(signatureData);
-      updateState({ signatureData: result });
-    } else {
-      updateState({ signatureData: action });
-    }
-  };
+  const setSignatureDataWrapper = useCallback(
+    (action: React.SetStateAction<Step3bFormData | null>) => {
+      if (typeof action === "function") {
+        const result = action(signatureData);
+        updateState({ signatureData: result });
+      } else {
+        updateState({ signatureData: action });
+      }
+    },
+    [signatureData, updateState]
+  );
 
-  const setSignaturePositionWrapper = (
-    action: React.SetStateAction<SignaturePosition>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(signaturePosition);
-      updateState({ signaturePosition: result });
-    } else {
-      updateState({ signaturePosition: action });
-    }
-  };
+  const setSignaturePositionWrapper = useCallback(
+    (action: React.SetStateAction<SignaturePosition>) => {
+      if (typeof action === "function") {
+        const result = action(signaturePosition);
+        updateState({ signaturePosition: result });
+      } else {
+        updateState({ signaturePosition: action });
+      }
+    },
+    [signaturePosition, updateState]
+  );
 
-  const setSignatureHistoryWrapper = (
-    action: React.SetStateAction<string[]>
-  ) => {
-    if (typeof action === "function") {
-      const result = action(signatureHistory);
-      updateState({ signatureHistory: result });
-    } else {
-      updateState({ signatureHistory: action });
-    }
-  };
+  const setSignatureHistoryWrapper = useCallback(
+    (action: React.SetStateAction<string[]>) => {
+      if (typeof action === "function") {
+        const result = action(signatureHistory);
+        updateState({ signatureHistory: result });
+      } else {
+        updateState({ signatureHistory: action });
+      }
+    },
+    [signatureHistory, updateState]
+  );
 
   // Use the create document mutation
   const {

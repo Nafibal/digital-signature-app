@@ -8,35 +8,22 @@
 export const PDF_SCALE = 1.5;
 
 /**
- * PDF document interface
- * Represents a loaded PDF document from PDF.js
+ * Type for PDF.js document proxy
+ * Using unknown to avoid type conflicts with pdfjs-dist types
  */
-export interface PdfDocument {
-  numPages: number;
-  getPage: (pageNumber: number) => Promise<PdfPage>;
-}
+export type PdfDocument = unknown;
 
 /**
- * PDF page interface
- * Represents a page in a PDF document
+ * Type for PDF.js page proxy
+ * Using unknown to avoid type conflicts with pdfjs-dist types
  */
-export interface PdfPage {
-  getViewport: (params: { scale: number }) => PdfViewport;
-  render: (renderContext: {
-    canvasContext: CanvasRenderingContext2D;
-    viewport: PdfViewport;
-    canvas: HTMLCanvasElement;
-  }) => { promise: Promise<void> };
-}
+export type PdfPage = unknown;
 
 /**
- * PDF viewport interface
- * Represents the viewport for rendering a PDF page
+ * Type for PDF.js viewport
+ * Using unknown to avoid type conflicts with pdfjs-dist types
  */
-export interface PdfViewport {
-  width: number;
-  height: number;
-}
+export type PdfViewport = unknown;
 
 // Worker configuration state
 let isWorkerConfigured = false;
@@ -50,6 +37,11 @@ let isWorkerConfigured = false;
  * @returns PDF document object
  */
 export async function loadPdfDocument(pdfUrl: string) {
+  // Validate URL
+  if (!pdfUrl || typeof pdfUrl !== "string") {
+    throw new Error("Invalid PDF URL provided");
+  }
+
   // Configure PDF.js worker only on client-side
   if (typeof window !== "undefined" && !isWorkerConfigured) {
     const { GlobalWorkerOptions } = await import("pdfjs-dist");
@@ -60,9 +52,16 @@ export async function loadPdfDocument(pdfUrl: string) {
   // Fetch PDF as ArrayBuffer to avoid CORS issues
   const response = await fetch(pdfUrl);
   if (!response.ok) {
-    throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch PDF: ${response.status} ${response.statusText}`
+    );
   }
+
   const pdfData = await response.arrayBuffer();
+
+  if (pdfData.byteLength === 0) {
+    throw new Error("PDF data is empty");
+  }
 
   const pdfjsLib = await import("pdfjs-dist");
   const loadingTask = pdfjsLib.getDocument({ data: pdfData });
@@ -89,21 +88,29 @@ export async function renderPdfPage(
     throw new Error("Canvas element is null");
   }
 
-  const page = await pdfDocument.getPage(pageNumber);
+  const doc = pdfDocument as { getPage: (n: number) => Promise<unknown> };
+  const page = (await doc.getPage(pageNumber)) as {
+    getViewport: (p: { scale: number }) => { width: number; height: number };
+    render: (ctx: unknown) => { promise: Promise<void> };
+  };
   const viewport = page.getViewport({ scale: PDF_SCALE });
 
   // Set canvas dimensions
   canvas.height = viewport.height;
   canvas.width = viewport.width;
 
-  // Render page to canvas
+  const canvasContext = canvas.getContext("2d");
+  if (!canvasContext) {
+    throw new Error("Failed to get canvas 2D context");
+  }
+
   const renderContext = {
-    canvasContext: canvas.getContext("2d")!,
-    viewport: viewport,
-    canvas: canvas,
+    canvasContext,
+    viewport,
+    canvas,
   };
 
-  await page.render(renderContext).promise;
+  await page.render(renderContext as unknown).promise;
 
   // Return the scale factor for coordinate conversion
   return PDF_SCALE;
@@ -116,5 +123,6 @@ export async function renderPdfPage(
  * @returns Number of pages in the PDF
  */
 export function getPdfPageCount(pdfDocument: PdfDocument): number {
-  return pdfDocument.numPages;
+  const doc = pdfDocument as { numPages: number };
+  return doc.numPages;
 }
