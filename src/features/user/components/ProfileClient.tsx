@@ -15,7 +15,7 @@ export default function ProfileClient({ session }: { session: Session }) {
   const user = session.user;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-12 py-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
         <p className="text-muted-foreground">

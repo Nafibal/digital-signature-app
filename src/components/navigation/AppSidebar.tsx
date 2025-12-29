@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Command, LayoutDashboard, User } from "lucide-react";
+import { Command, FileSignature, LayoutDashboard, User } from "lucide-react";
 
 import { NavMain } from "@/components/navigation/NavMain";
 import { NavUser } from "@/components/navigation/NavUser";
@@ -60,7 +60,7 @@ export function AppSidebar({
             <SidebarMenuButton size="lg" asChild>
               <a href="/dashboard">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
+                  <FileSignature className="h-5 w-5" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">DigiSign</span>
