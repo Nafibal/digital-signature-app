@@ -1,18 +1,10 @@
-/**
- * Workflow State Types
- *
- * This file defines all TypeScript types related to document workflow state management.
- * These types provide a single source of truth for the workflow state structure.
- */
-
-import {
+import type {
   Step1FormData,
   Step3aFormData,
   Step3bFormData,
   SignaturePosition,
   DocumentPdfResponse,
-} from "./document";
-import { GetDocumentResponse } from "@/lib/api/documents";
+} from "../document/types";
 
 /**
  * Step 1 form state wrapper
@@ -34,7 +26,7 @@ export interface DocumentWorkflowState {
 
   // Document data
   createdDocumentId: string | null;
-  documentDataFetched: GetDocumentResponse | null;
+  documentDataFetched: Record<string, unknown> | null;
 
   // Step 1 state
   step1FormState: Step1FormState | null;
@@ -72,7 +64,7 @@ export interface DocumentWorkflowState {
 
 /**
  * Type for partial state updates
- * Allows updating only specific parts of the workflow state
+ * Allows updating only specific parts of workflow state
  */
 export type WorkflowStateUpdate = Partial<DocumentWorkflowState>;
 
@@ -91,4 +83,38 @@ export interface UseDocumentWorkflowStateReturn {
   updateState: (updates: WorkflowStateUpdate) => void;
   updateStep: (step: number, updates?: WorkflowStateUpdate) => void;
   setDocumentId: (id: string) => void;
+}
+
+/**
+ * Step configuration interface
+ */
+export interface StepConfig {
+  stepNumber: number;
+  title: string;
+  description: string;
+  canProceed: (state: DocumentWorkflowState) => boolean;
+  nextLabel: string | ((state: DocumentWorkflowState) => string);
+  previousLabel: string;
+  showPrevious: boolean;
+}
+
+/**
+ * Dependencies required by step handlers
+ */
+export interface StepHandlerDependencies {
+  updateState: (updates: Partial<DocumentWorkflowState>) => void;
+  updateStep: (step: number, updates?: Partial<DocumentWorkflowState>) => void;
+  createDocument: (data: Record<string, unknown>) => void;
+  updateDocument: (data: Record<string, unknown>) => void;
+  saveContent: (data: Record<string, unknown>) => void;
+  resetDocumentCreation: () => void;
+  resetDocumentUpdate: () => void;
+}
+
+/**
+ * Step handler interface
+ */
+export interface StepHandler {
+  handleNext: () => Promise<void>;
+  handlePrevious: () => void;
 }
