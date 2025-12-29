@@ -315,6 +315,30 @@ export interface DocumentPdfResponse {
 }
 
 /**
+ * Document Response
+ * Response from /api/documents/[id]
+ */
+export interface DocumentResponse {
+  id: string;
+  ownerId: string;
+  title: string;
+  description: string | null;
+  documentType: string | null;
+  currentStep: number;
+  subStep: number | null;
+  status: string;
+
+  // PDF tracking
+  currentPdfId: string | null;
+  currentPdf: DocumentPdfResponse | null;
+  signedPdfId: string | null;
+  signedPdf: DocumentPdfResponse | null;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * Document PDF Type
  * Represents a PDF document in the database
  */

@@ -44,6 +44,7 @@ export interface UpdateDocumentRequest {
   subStep?: number;
   pdfPath?: string;
   currentPdfId?: string;
+  signedPdfId?: string;
 }
 
 /**
@@ -57,6 +58,12 @@ export interface UpdateDocumentResponse {
   currentStep: number;
   subStep?: number | null;
   status: DocumentStatus;
+  sourceType?: string | null;
+  pdfPath?: string | null;
+  currentPdfId?: string | null;
+  currentPdf?: DocumentPdf | null;
+  signedPdfId?: string | null;
+  signedPdf?: DocumentPdf | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,6 +95,8 @@ export interface GetDocumentResponse {
   pdfPath?: string | null;
   currentPdfId?: string | null;
   currentPdf?: DocumentPdf | null;
+  signedPdfId?: string | null;
+  signedPdf?: DocumentPdf | null;
   createdAt: string;
   updatedAt: string;
 }

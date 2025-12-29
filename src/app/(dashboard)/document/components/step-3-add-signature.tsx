@@ -483,7 +483,7 @@ export default function Step3AddSignature({
           {signatureImage && (
             <div className="space-y-4">
               {/* Sign PDF Button */}
-              {/* <Button
+              <Button
                 type="button"
                 onClick={handleSignPdf}
                 disabled={isSigningPdf || isPdfSigned}
@@ -525,7 +525,7 @@ export default function Step3AddSignature({
                     Sign PDF
                   </>
                 )}
-              </Button> */}
+              </Button>
 
               {/* Success Message */}
               {/* {isPdfSigned && !isSigningPdf && (

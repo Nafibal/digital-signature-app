@@ -57,6 +57,17 @@ export async function GET(
             status: true,
           },
         },
+        signedPdfId: true,
+        signedPdf: {
+          select: {
+            id: true,
+            pdfPath: true,
+            fileName: true,
+            fileSize: true,
+            pageCount: true,
+            status: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -77,6 +88,12 @@ export async function GET(
         ? {
             ...document.currentPdf,
             publicUrl: getPublicUrl(document.currentPdf.pdfPath),
+          }
+        : null,
+      signedPdf: document.signedPdf
+        ? {
+            ...document.signedPdf,
+            publicUrl: getPublicUrl(document.signedPdf.pdfPath),
           }
         : null,
     };
@@ -152,6 +169,9 @@ export async function PATCH(
         ...(body.currentPdfId !== undefined && {
           currentPdfId: body.currentPdfId,
         }),
+        ...(body.signedPdfId !== undefined && {
+          signedPdfId: body.signedPdfId,
+        }),
       },
       select: {
         id: true,
@@ -174,6 +194,17 @@ export async function PATCH(
             status: true,
           },
         },
+        signedPdfId: true,
+        signedPdf: {
+          select: {
+            id: true,
+            pdfPath: true,
+            fileName: true,
+            fileSize: true,
+            pageCount: true,
+            status: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -186,6 +217,12 @@ export async function PATCH(
         ? {
             ...updatedDocument.currentPdf,
             publicUrl: getPublicUrl(updatedDocument.currentPdf.pdfPath),
+          }
+        : null,
+      signedPdf: updatedDocument.signedPdf
+        ? {
+            ...updatedDocument.signedPdf,
+            publicUrl: getPublicUrl(updatedDocument.signedPdf.pdfPath),
           }
         : null,
     };

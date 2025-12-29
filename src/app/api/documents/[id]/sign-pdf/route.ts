@@ -26,14 +26,7 @@ export async function POST(
     const body = await req.json();
 
     // Validate required fields
-    const { documentPdfId, signatureImage, position } = body;
-
-    if (!documentPdfId) {
-      return NextResponse.json(
-        { message: "documentPdfId is required" },
-        { status: 400 }
-      );
-    }
+    const { signatureImage, position } = body;
 
     if (!signatureImage) {
       return NextResponse.json(
@@ -49,11 +42,14 @@ export async function POST(
       );
     }
 
-    // Validate that document belongs to user
+    // Validate that document belongs to user and has a current PDF
     const existingDocument = await prisma.document.findFirst({
       where: {
         id: documentId,
         ownerId: session.user.id,
+      },
+      include: {
+        currentPdf: true,
       },
     });
 
@@ -64,13 +60,15 @@ export async function POST(
       );
     }
 
-    // Validate that PDF belongs to document
-    const existingPdf = await prisma.documentPdf.findFirst({
-      where: {
-        id: documentPdfId,
-        documentId,
-      },
-    });
+    if (!existingDocument.currentPdfId) {
+      return NextResponse.json(
+        { message: "Document has no PDF to sign" },
+        { status: 400 }
+      );
+    }
+
+    // Use currentPdf (original/unsigned PDF) for signing
+    const existingPdf = existingDocument.currentPdf;
 
     if (!existingPdf) {
       return NextResponse.json(
@@ -141,10 +139,10 @@ export async function POST(
       },
     });
 
-    // Update document's current PDF reference
+    // Update document's signed PDF reference (NOT currentPdfId)
     await prisma.document.update({
       where: { id: documentId },
-      data: { currentPdfId: signedPdf.id },
+      data: { signedPdfId: signedPdf.id },
     });
 
     return NextResponse.json(

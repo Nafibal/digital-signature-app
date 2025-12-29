@@ -107,7 +107,8 @@ model Document {
   currentContentId String?         @unique @map("current_content_id") @db.Uuid // Reference to current content
   
   // PDF tracking for signing
-  currentPdfId  String?            @unique @map("current_pdf_id") @db.Uuid // Reference to current PDF
+  currentPdfId  String?            @unique @map("current_pdf_id") @db.Uuid // Reference to original/unsigned PDF
+  signedPdfId   String?            @unique @map("signed_pdf_id") @db.Uuid  // Reference to signed PDF (when signed)
   
   createdAt     DateTime           @default(now()) @map("created_at")
   updatedAt     DateTime           @updatedAt @map("updated_at")
@@ -119,6 +120,7 @@ model Document {
   signatures    Signature[]
   currentContent DocumentContent?  @relation("DocumentCurrentContent", fields: [currentContentId], references: [id])
   currentPdf    DocumentPdf?       @relation("DocumentCurrentPdf", fields: [currentPdfId], references: [id])
+  signedPdf     DocumentPdf?       @relation("DocumentSignedPdf", fields: [signedPdfId], references: [id])
   pdfs          DocumentPdf[]      @relation("DocumentPdfs")
 
   @@index([ownerId])
@@ -169,6 +171,7 @@ model DocumentPdf {
   
   // Relations
   document    Document @relation("DocumentPdfs", fields: [documentId], references: [id], onDelete: Cascade)
+  signedForDocument Document? @relation("DocumentSignedPdf")
   signatures  Signature[]
   currentForDocument Document? @relation("DocumentCurrentPdf")
   
