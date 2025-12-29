@@ -26,7 +26,10 @@ export async function embedSignatureIntoPdf(
   // Load PDF document
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const pages = pdfDoc.getPages();
-  const firstPage = pages[0];
+
+  // Get the correct page (default to page 1 if not specified)
+  const pageIndex = (position.page || 1) - 1; // Convert to 0-based index
+  const targetPage = pages[pageIndex] || pages[0];
 
   // Convert data URL to Uint8Array
   const base64Data = signatureImage.split(",")[1];
@@ -35,8 +38,8 @@ export async function embedSignatureIntoPdf(
   // Embed PNG image
   const pngImage = await pdfDoc.embedPng(imageBytes);
 
-  // Draw image at specified position
-  firstPage.drawImage(pngImage, {
+  // Draw image at specified position on the target page
+  targetPage.drawImage(pngImage, {
     x: position.x,
     y: position.y,
     width: position.width,

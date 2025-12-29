@@ -83,12 +83,14 @@ export default function Step3AddSignature({
   const [signPdfError, setSignPdfError] = useState<string | null>(null);
   const [isPdfSigned, setIsPdfSigned] = useState<boolean>(false);
 
+  // Page selection state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
   // Visual position for display (separate from canvas pixel position for PDF)
   const [visualPosition, setVisualPosition] = useState<CanvasPosition>({
     x: 0,
     y: 0,
   });
-  const [visualPage, setVisualPage] = useState<number>(1);
 
   // Refs
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -175,6 +177,9 @@ export default function Step3AddSignature({
           page: mostRecentSignature.pageNumber,
         });
 
+        // Set current page to the signature's page
+        setCurrentPage(mostRecentSignature.pageNumber);
+
         // Convert canvas pixel position to visual position for display
         if (containerRef.current) {
           const canvas = containerRef.current.querySelector(
@@ -217,6 +222,9 @@ export default function Step3AddSignature({
                 y: canvasPosition.y,
                 page: mostRecentSignature.pageNumber,
               });
+
+              // Set current page to the signature's page
+              setCurrentPage(mostRecentSignature.pageNumber);
 
               // Convert canvas pixel position to visual position for display
               const scaleX =
@@ -273,13 +281,17 @@ export default function Step3AddSignature({
 
       // Store both visual position (for display) and canvas pixel position (for PDF)
       setVisualPosition(clampedPosition);
-      setVisualPage(1);
       setSignaturePosition({
         x: scaledPosition.x,
         y: scaledPosition.y,
-        page: 1,
+        page: currentPage,
       });
     }
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   // Clear form
@@ -386,6 +398,7 @@ export default function Step3AddSignature({
           y: pdfPosition.y,
           width: pdfPosition.width,
           height: pdfPosition.height,
+          page: signaturePosition.page,
         },
       });
 
@@ -546,12 +559,14 @@ export default function Step3AddSignature({
       <PdfPreviewPanel
         documentPdf={documentPdf}
         signatureImage={signatureImage}
-        signaturePosition={visualPosition}
+        signaturePosition={{ ...visualPosition, page: currentPage }}
         onSignatureDrag={handleSignatureDrag}
         containerRef={containerRef}
         onPdfScaleChange={setPdfScale}
         signatureDisplayWidth={SIGNATURE_IMAGE_WIDTH / pdfScale}
         signatureDisplayHeight={SIGNATURE_IMAGE_HEIGHT / pdfScale}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
       />
     </div>
   );

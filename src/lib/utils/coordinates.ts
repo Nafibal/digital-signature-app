@@ -24,6 +24,7 @@ export interface PdfPosition {
   y: number;
   width: number;
   height: number;
+  page?: number;
 }
 
 /**

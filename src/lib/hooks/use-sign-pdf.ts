@@ -9,6 +9,7 @@ interface SignPdfRequest {
     y: number;
     width: number;
     height: number;
+    page?: number;
   };
 }
 

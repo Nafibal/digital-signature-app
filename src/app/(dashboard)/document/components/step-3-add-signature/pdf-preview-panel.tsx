@@ -6,14 +6,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FileText, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { SignaturePosition, DocumentPdfResponse } from "@/lib/types/document";
 import {
   SIGNATURE_IMAGE_WIDTH,
   SIGNATURE_IMAGE_HEIGHT,
 } from "@/lib/utils/signature";
 import { DraggableSignature } from "@/components/pdf";
-import { loadPdfDocument, renderPdfPage, PDF_SCALE } from "@/lib/utils/pdf";
+import {
+  loadPdfDocument,
+  renderPdfPage,
+  PDF_SCALE,
+  getPdfPageCount,
+} from "@/lib/utils/pdf";
 
 interface PdfPreviewPanelProps {
   documentPdf: DocumentPdfResponse | null;
@@ -24,6 +30,8 @@ interface PdfPreviewPanelProps {
   onPdfScaleChange?: (scale: number) => void;
   signatureDisplayWidth?: number;
   signatureDisplayHeight?: number;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export default function PdfPreviewPanel({
@@ -35,12 +43,21 @@ export default function PdfPreviewPanel({
   onPdfScaleChange,
   signatureDisplayWidth,
   signatureDisplayHeight,
+  currentPage = 1,
+  onPageChange,
 }: PdfPreviewPanelProps) {
   // Local canvas ref and state
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isRenderingRef = useRef(false);
   const [isPdfLoading, setIsPdfLoading] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [localCurrentPage, setLocalCurrentPage] = useState<number>(currentPage);
+
+  // Update local page when currentPage prop changes
+  useEffect(() => {
+    setLocalCurrentPage(currentPage);
+  }, [currentPage]);
 
   // Load and render PDF when documentPdf is available
   useLayoutEffect(() => {
@@ -64,7 +81,17 @@ export default function PdfPreviewPanel({
     const renderPdf = async () => {
       try {
         const pdfDoc = await loadPdfDocument(documentPdf.publicUrl);
-        const scale = await renderPdfPage(pdfDoc, 1, canvasRef.current!);
+
+        // Get total pages
+        const pageCount = getPdfPageCount(pdfDoc);
+        setTotalPages(pageCount);
+
+        // Render the current page
+        const scale = await renderPdfPage(
+          pdfDoc,
+          localCurrentPage,
+          canvasRef.current!
+        );
         // Notify parent of scale change
         if (onPdfScaleChange) {
           onPdfScaleChange(scale);
@@ -80,15 +107,63 @@ export default function PdfPreviewPanel({
     };
 
     renderPdf();
-  }, [documentPdf, onPdfScaleChange]);
+  }, [documentPdf, onPdfScaleChange, localCurrentPage]);
+
+  // Handle page navigation
+  const handlePreviousPage = () => {
+    if (localCurrentPage > 1) {
+      const newPage = localCurrentPage - 1;
+      setLocalCurrentPage(newPage);
+      if (onPageChange) {
+        onPageChange(newPage);
+      }
+    }
+  };
+
+  const handleNextPage = () => {
+    if (localCurrentPage < totalPages) {
+      const newPage = localCurrentPage + 1;
+      setLocalCurrentPage(newPage);
+      if (onPageChange) {
+        onPageChange(newPage);
+      }
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Place Signature</CardTitle>
-        <CardDescription>
-          Drag signature to desired position on document
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Place Signature</CardTitle>
+            <CardDescription>
+              Drag signature to desired position on document
+            </CardDescription>
+          </div>
+          {totalPages > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousPage}
+                disabled={localCurrentPage === 1 || isPdfLoading}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium min-w-[80px] text-center">
+                Page {localCurrentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextPage}
+                disabled={localCurrentPage === totalPages || isPdfLoading}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div
@@ -124,16 +199,17 @@ export default function PdfPreviewPanel({
                 className="w-full"
                 style={{ display: "block" }}
               />
-              {signatureImage && (
-                <DraggableSignature
-                  signatureImage={signatureImage}
-                  position={signaturePosition}
-                  onDrag={onSignatureDrag}
-                  containerRef={containerRef}
-                  width={signatureDisplayWidth ?? SIGNATURE_IMAGE_WIDTH}
-                  height={signatureDisplayHeight ?? SIGNATURE_IMAGE_HEIGHT}
-                />
-              )}
+              {signatureImage &&
+                signaturePosition.page === localCurrentPage && (
+                  <DraggableSignature
+                    signatureImage={signatureImage}
+                    position={signaturePosition}
+                    onDrag={onSignatureDrag}
+                    containerRef={containerRef}
+                    width={signatureDisplayWidth ?? SIGNATURE_IMAGE_WIDTH}
+                    height={signatureDisplayHeight ?? SIGNATURE_IMAGE_HEIGHT}
+                  />
+                )}
             </>
           )}
         </div>
@@ -143,7 +219,7 @@ export default function PdfPreviewPanel({
             <p className="text-sm text-neutral-600">
               <span className="font-medium">Visual Position:</span> X:{" "}
               {Math.round(signaturePosition.x)}, Y:{" "}
-              {Math.round(signaturePosition.y)}
+              {Math.round(signaturePosition.y)}, Page: {signaturePosition.page}
             </p>
           </div>
         )}
