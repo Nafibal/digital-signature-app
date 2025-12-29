@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { DocumentStatus } from "@/lib/api/documents";
+import { cn } from "@/lib/helpers";
+import { DocumentStatus } from "@/features/document/services";
 
 interface StatusBadgeProps {
   status: DocumentStatus;

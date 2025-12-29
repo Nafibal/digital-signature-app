@@ -11,7 +11,7 @@ import Step3FillContent from "./components/step-3-fill-content";
 import Step3AddSignature from "./components/step-3-add-signature";
 import Step4FinalReview from "./components/step-4-final-review";
 import WorkflowNavigation from "./components/workflow-navigation";
-import { LoadingState } from "@/components/ui/loading-state";
+import { LoadingState } from "@/components/feedback/LoadingState";
 import {
   Step1FormData,
   Step3aFormData,

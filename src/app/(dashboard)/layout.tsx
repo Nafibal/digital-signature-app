@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/navigation/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";

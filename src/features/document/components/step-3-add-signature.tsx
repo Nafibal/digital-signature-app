@@ -8,26 +8,24 @@ import {
   SignaturePosition,
   Step3bFormData,
   DocumentPdfResponse,
-} from "@/lib/types/document";
+} from "@/features/document/types";
 import {
   generateSignatureImage,
   SIGNATURE_IMAGE_WIDTH,
   SIGNATURE_IMAGE_HEIGHT,
-} from "@/lib/utils/signature";
-import { PDF_SCALE } from "@/lib/utils/pdf";
-import {
+  PDF_SCALE,
   convertCanvasToPdfCoordinates,
   convertPdfToCanvasCoordinates,
   clampPosition,
   CanvasPosition,
-} from "@/lib/utils/coordinates";
-import SignatureForm from "./step-3-add-signature/signature-form";
-import SignaturePreview from "./step-3-add-signature/signature-preview";
-import SignatureStatus from "./step-3-add-signature/signature-status";
-import SignatureSaveButton from "./step-3-add-signature/signature-save-button";
-import PdfPreviewPanel from "./step-3-add-signature/pdf-preview-panel";
-import { useGetSignatures } from "@/lib/hooks/use-get-signatures";
-import { useSignPdf } from "@/lib/hooks/use-sign-pdf";
+} from "@/lib/helpers";
+import SignatureForm from "./step-3-add-signature/SignatureForm";
+import SignaturePreview from "./step-3-add-signature/SignaturePreview";
+import SignatureStatus from "./step-3-add-signature/SignatureStatus";
+import SignatureSaveButton from "./step-3-add-signature/SignatureSaveButton";
+import PdfPreviewPanel from "./step-3-add-signature/PdfPreviewPanel";
+import { useGetSignatures } from "@/features/document/hooks/use-get-signatures";
+import { useSignPdf } from "@/features/document/hooks/use-sign-pdf";
 import { FileSignature, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface Step3AddSignatureProps {

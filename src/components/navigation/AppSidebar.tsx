@@ -3,8 +3,8 @@
 import * as React from "react";
 import { Command, LayoutDashboard, User } from "lucide-react";
 
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
+import { NavMain } from "@/components/navigation/NavMain";
+import { NavUser } from "@/components/navigation/NavUser";
 import {
   Sidebar,
   SidebarContent,

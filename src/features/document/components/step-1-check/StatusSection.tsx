@@ -5,7 +5,7 @@
  * Extracted from step-1-check.tsx for better organization and reusability.
  */
 
-import { StatusMessage } from "@/components/ui/status-message";
+import { StatusMessage } from "@/components/feedback/StatusMessage";
 
 interface StatusSectionProps {
   isSuccess?: boolean;

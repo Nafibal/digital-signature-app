@@ -14,7 +14,7 @@ import {
   FileText,
   Link2,
 } from "lucide-react";
-import NavigationBar from "@/components/navigation-bar";
+import NavigationBar from "@/components/navigation/NavigationBar";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 

@@ -8,18 +8,19 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-import { SignaturePosition, DocumentPdfResponse } from "@/lib/types/document";
+import {
+  SignaturePosition,
+  DocumentPdfResponse,
+} from "@/features/document/types";
 import {
   SIGNATURE_IMAGE_WIDTH,
   SIGNATURE_IMAGE_HEIGHT,
-} from "@/lib/utils/signature";
-import { DraggableSignature } from "@/components/pdf";
-import {
+  PDF_SCALE,
   loadPdfDocument,
   renderPdfPage,
-  PDF_SCALE,
   getPdfPageCount,
 } from "@/lib/utils/pdf";
+import { DraggableSignature } from "@/components/pdf";
 
 interface PdfPreviewPanelProps {
   documentPdf: DocumentPdfResponse | null;
