@@ -264,13 +264,17 @@ export default function Step3AddSignature({
       const scaleX = canvas.width / canvas.getBoundingClientRect().width;
       const scaleY = canvas.height / canvas.getBoundingClientRect().height;
 
-      // Clamp position in visual space
+      // Calculate signature display dimensions
+      const signatureDisplayWidth = SIGNATURE_IMAGE_WIDTH / pdfScale;
+      const signatureDisplayHeight = SIGNATURE_IMAGE_HEIGHT / pdfScale;
+
+      // Clamp position in visual space using display dimensions
       const clampedPosition = clampPosition(
         { x, y },
         containerRect.width,
         containerRect.height,
-        SIGNATURE_IMAGE_WIDTH,
-        SIGNATURE_IMAGE_HEIGHT
+        signatureDisplayWidth,
+        signatureDisplayHeight
       );
 
       // Scale from visual space to canvas pixel space
@@ -463,11 +467,11 @@ export default function Step3AddSignature({
             signatureImage={signatureImage}
             onClearForm={clearSignature}
           />
-          <SignaturePreview
+          {/* <SignaturePreview
             signatureData={signatureData}
             signatureImage={signatureImage}
           />
-          <SignatureStatus signatureImage={signatureImage} />
+          <SignatureStatus signatureImage={signatureImage} /> */}
           <SignatureSaveButton
             signatureImage={signatureImage}
             isSaving={isSaving}
@@ -479,7 +483,7 @@ export default function Step3AddSignature({
           {signatureImage && (
             <div className="space-y-4">
               {/* Sign PDF Button */}
-              <Button
+              {/* <Button
                 type="button"
                 onClick={handleSignPdf}
                 disabled={isSigningPdf || isPdfSigned}
@@ -521,10 +525,10 @@ export default function Step3AddSignature({
                     Sign PDF
                   </>
                 )}
-              </Button>
+              </Button> */}
 
               {/* Success Message */}
-              {isPdfSigned && !isSigningPdf && (
+              {/* {isPdfSigned && !isSigningPdf && (
                 <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-800 dark:bg-green-900 dark:text-green-100">
                   <CheckCircle2 className="h-6 w-6 shrink-0" />
                   <div className="flex-1">
@@ -537,10 +541,10 @@ export default function Step3AddSignature({
                     </p>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Error Message */}
-              {signPdfError && (
+              {/* {signPdfError && (
                 <div className="flex items-start gap-2 rounded-lg bg-red-50 p-4 text-red-800 dark:bg-red-950 dark:text-red-100">
                   <AlertCircle className="h-6 w-6 shrink-0" />
                   <div className="flex-1">
@@ -550,7 +554,7 @@ export default function Step3AddSignature({
                     </p>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           )}
         </CardContent>
