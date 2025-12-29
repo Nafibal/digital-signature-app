@@ -36,3 +36,18 @@ vi.mock("@/lib/supabase", () => ({
     },
   },
 }));
+
+// Mock Supabase storage to avoid environment variable errors
+vi.mock("@/server/storage/supabase", () => ({
+  supabase: {
+    storage: {
+      from: vi.fn(() => ({
+        upload: vi.fn(),
+        getPublicUrl: vi.fn(() => ({
+          data: { publicUrl: "http://example.com/file.pdf" },
+        })),
+        remove: vi.fn(),
+      })),
+    },
+  },
+}));
