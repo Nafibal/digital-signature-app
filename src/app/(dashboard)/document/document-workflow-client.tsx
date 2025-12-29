@@ -146,7 +146,14 @@ export default function DocumentWorkflowClient({
         },
       });
     }
-  }, [documentDataFetched, state.documentPdf, updateState]);
+
+    // Update signed PDF URL when document is signed (runs on every refetch)
+    if (documentDataFetched?.signedPdf?.publicUrl) {
+      updateState({
+        finalPdfUrl: documentDataFetched.signedPdf.publicUrl,
+      });
+    }
+  }, [documentDataFetched, updateState]);
 
   const handleCancel = () => {
     router.push("/dashboard");
@@ -364,14 +371,21 @@ export default function DocumentWorkflowClient({
     }
   }, [state.createdDocumentId, state.content, updateState, saveContent]);
 
-  const handleSaveSignedDocument = useCallback(async () => {
-    updateState({ isSaving: true, saveStatus: "saving" });
-    // Mock save delay
-    setTimeout(() => {
-      updateState({ isSaving: false, saveStatus: "saved" });
-      router.push("/dashboard");
-    }, 1500);
-  }, [updateState, router]);
+  const handleDownloadPdf = useCallback(() => {
+    if (!state.finalPdfUrl || state.finalPdfUrl.length === 0) {
+      console.error("No signed PDF available for download");
+      return;
+    }
+
+    // Create download link
+    const link = document.createElement("a");
+    link.href = state.finalPdfUrl;
+    link.download = `signed-document-${Date.now()}.pdf`;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [state.finalPdfUrl]);
 
   // Use memoized validation hook
   const validators = useWorkflowValidators(state);
@@ -484,7 +498,7 @@ export default function DocumentWorkflowClient({
               }
               signature={signatureImage}
               signaturePosition={signaturePosition}
-              finalPdfUrl={finalPdfUrl}
+              documentDataFetched={documentDataFetched}
             />
           )}
         </div>
@@ -499,7 +513,7 @@ export default function DocumentWorkflowClient({
           onPrevious={handlePrevious}
           onNext={handleNext}
           onSaveDraft={handleSaveDraft}
-          onSaveSignedDocument={handleSaveSignedDocument}
+          onDownloadPdf={handleDownloadPdf}
           onCancel={handleCancel}
         />
       </main>

@@ -5,9 +5,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Save,
-  X,
-  CheckCircle2,
+  Download,
   Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
 interface WorkflowNavigationProps {
@@ -19,7 +19,7 @@ interface WorkflowNavigationProps {
   onPrevious: () => void;
   onNext: () => void;
   onSaveDraft: () => void;
-  onSaveSignedDocument: () => void;
+  onDownloadPdf: () => void;
   onCancel: () => void;
 }
 
@@ -32,7 +32,7 @@ export default function WorkflowNavigation({
   onPrevious,
   onNext,
   onSaveDraft,
-  onSaveSignedDocument,
+  onDownloadPdf,
   onCancel,
 }: WorkflowNavigationProps) {
   const isLastStep = currentStep === 4;
@@ -97,18 +97,18 @@ export default function WorkflowNavigation({
         {isLastStep && (
           <Button
             type="button"
-            onClick={onSaveSignedDocument}
+            onClick={onDownloadPdf}
             disabled={isSaving}
             className="gap-2"
           >
             {isSaving && saveStatus === "saving" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <CheckCircle2 className="h-4 w-4" />
+              <Download className="h-4 w-4" />
             )}
             {isSaving && saveStatus === "saving"
-              ? "Saving..."
-              : "Save Signed Document"}
+              ? "Downloading..."
+              : "Download PDF"}
           </Button>
         )}
       </div>

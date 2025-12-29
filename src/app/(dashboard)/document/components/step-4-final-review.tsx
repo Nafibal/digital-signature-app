@@ -7,80 +7,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
 import { Step1FormData, SignaturePosition } from "@/lib/types/document";
+import { GetDocumentResponse } from "@/lib/api/documents";
 import DocumentSummary from "./step-4-final-review/document-summary";
-import PdfPreviewSection from "./step-4-final-review/pdf-preview-section";
+import SignedPdfPreview from "./step-4-final-review/signed-pdf-preview";
 
 interface Step4FinalReviewProps {
   documentData: Step1FormData;
   signature: string | null;
   signaturePosition: SignaturePosition;
-  finalPdfUrl: string;
+  documentDataFetched?: GetDocumentResponse | null;
 }
 
 export default function Step4FinalReview({
   documentData,
   signature,
   signaturePosition,
-  finalPdfUrl,
+  documentDataFetched,
 }: Step4FinalReviewProps) {
+  // Extract signed PDF URL from database data (single source of truth)
+  const finalPdfUrl = documentDataFetched?.signedPdf?.publicUrl || "";
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 
-  const handleDownload = () => {
-    if (!finalPdfUrl || finalPdfUrl.length === 0) {
-      console.error("No signed PDF available for download");
-      return;
-    }
-
-    // Create download link
-    const link = document.createElement("a");
-    link.href = finalPdfUrl;
-    link.download = `signed-document-${Date.now()}.pdf`;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <div className="grid gap-6 lg:grid-cols-2">
       <DocumentSummary documentData={documentData} currentDate={currentDate} />
 
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Final Review</CardTitle>
-              <CardDescription>Preview your signed document</CardDescription>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              disabled={!finalPdfUrl || finalPdfUrl.length === 0}
-              className="gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Download
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <PdfPreviewSection
-            signature={signature}
-            signaturePosition={signaturePosition}
-            finalPdfUrl={finalPdfUrl}
-            onDownload={handleDownload}
-          />
-        </CardContent>
-      </Card>
+      <SignedPdfPreview finalPdfUrl={finalPdfUrl} />
     </div>
   );
 }

@@ -393,7 +393,7 @@ export default function Step3AddSignature({
       );
 
       // Sign PDF with embedded signature
-      await signPdf({
+      const result = await signPdf({
         documentId,
         documentPdfId: documentPdf.id,
         signatureImage,
@@ -409,13 +409,13 @@ export default function Step3AddSignature({
       // Update state to show PDF is signed
       setIsPdfSigned(true);
 
-      // Update workflow state to enable Next button
-      if (onPdfSigned) {
-        onPdfSigned("signed");
+      // Update workflow state with signed PDF URL
+      if (onPdfSigned && result?.signedPdf?.publicUrl) {
+        onPdfSigned(result.signedPdf.publicUrl);
       }
 
-      // Note: The signed PDF URL will be updated via the onSuccess callback in the hook
-      // which invalidates document queries and triggers a refetch
+      // Note: The document query will also be invalidated via the onSuccess callback in the hook
+      // which triggers a refetch of document data
     } catch (error) {
       console.error("Error signing PDF:", error);
       setSignPdfError(
