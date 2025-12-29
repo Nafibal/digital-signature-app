@@ -5,15 +5,25 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   test: {
-    globals: true,
     environment: "jsdom",
+    globals: true,
     setupFiles: ["./tests/setup.ts"],
-    css: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: [
+        "node_modules/",
+        "tests/",
+        "**/*.config.*",
+        "**/*.d.ts",
+        "public/",
+        "prisma/",
+      ],
+    },
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "pdfjs-dist": "/__mocks__/pdfjs-dist.ts",
     },
   },
 });
