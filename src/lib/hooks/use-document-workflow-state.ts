@@ -91,6 +91,22 @@ export function useDocumentWorkflowState({
             currentStep: documentDataFetched.currentStep,
             subStep: documentDataFetched.subStep || 1,
             documentDataFetched,
+            // Update isPdfSigned based on whether signedPdfId exists in database
+            isPdfSigned: documentDataFetched.signedPdfId !== null,
+          };
+        }
+        // Also update isPdfSigned if the signedPdfId changed
+        if (
+          prev.documentDataFetched &&
+          prev.documentDataFetched.signedPdfId !==
+            documentDataFetched.signedPdfId
+        ) {
+          return {
+            ...prev,
+            currentStep: documentDataFetched.currentStep,
+            subStep: documentDataFetched.subStep || 1,
+            documentDataFetched,
+            isPdfSigned: documentDataFetched.signedPdfId !== null,
           };
         }
         return prev;

@@ -54,10 +54,14 @@ export function useWorkflowValidators(
         : false;
 
     // Step 3b: Check if signature is created and PDF is signed
+    // PDF is considered signed if either:
+    // 1. Local state indicates it's signed (isPdfSigned === true), OR
+    // 2. Database has a signedPdfId (document has been signed)
+    const isPdfSignedInDb = state.documentDataFetched?.signedPdfId !== null;
     const isStep3bValid =
       state.signatureImage !== null &&
       state.signatureData !== null &&
-      state.isPdfSigned === true;
+      (state.isPdfSigned === true || isPdfSignedInDb);
 
     // Determine if user can proceed to next step based on current step
     const canProceed = () => {
@@ -83,6 +87,7 @@ export function useWorkflowValidators(
     state.signatureImage,
     state.signatureData,
     state.isPdfSigned,
+    state.documentDataFetched?.signedPdfId,
     state.currentStep,
     state.subStep,
   ]);

@@ -411,13 +411,6 @@ export default function Step3AddSignature({
 
       // Note: The signed PDF URL will be updated via the onSuccess callback in the hook
       // which invalidates document queries and triggers a refetch
-
-      // Auto-proceed to Step 4 after short delay
-      setTimeout(() => {
-        if (onProceedToStep4) {
-          onProceedToStep4();
-        }
-      }, 1500);
     } catch (error) {
       console.error("Error signing PDF:", error);
       setSignPdfError(
@@ -528,7 +521,7 @@ export default function Step3AddSignature({
               </Button>
 
               {/* Success Message */}
-              {/* {isPdfSigned && !isSigningPdf && (
+              {isPdfSigned && !isSigningPdf && (
                 <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-800 dark:bg-green-900 dark:text-green-100">
                   <CheckCircle2 className="h-6 w-6 shrink-0" />
                   <div className="flex-1">
@@ -536,15 +529,15 @@ export default function Step3AddSignature({
                       PDF Signed Successfully!
                     </p>
                     <p className="text-sm text-green-700 dark:text-green-300">
-                      Your document has been signed and is ready for final
-                      review. Proceeding to Step 4...
+                      Your document has been signed. Click Next to proceed to
+                      final review.
                     </p>
                   </div>
                 </div>
-              )} */}
+              )}
 
               {/* Error Message */}
-              {/* {signPdfError && (
+              {signPdfError && (
                 <div className="flex items-start gap-2 rounded-lg bg-red-50 p-4 text-red-800 dark:bg-red-950 dark:text-red-100">
                   <AlertCircle className="h-6 w-6 shrink-0" />
                   <div className="flex-1">
@@ -554,7 +547,7 @@ export default function Step3AddSignature({
                     </p>
                   </div>
                 </div>
-              )} */}
+              )}
             </div>
           )}
         </CardContent>

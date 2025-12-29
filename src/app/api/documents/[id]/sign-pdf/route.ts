@@ -139,10 +139,13 @@ export async function POST(
       },
     });
 
-    // Update document's signed PDF reference (NOT currentPdfId)
+    // Update document's signed PDF reference and set currentStep to 4
     await prisma.document.update({
       where: { id: documentId },
-      data: { signedPdfId: signedPdf.id },
+      data: {
+        signedPdfId: signedPdf.id,
+        currentStep: 4,
+      },
     });
 
     return NextResponse.json(
