@@ -44,8 +44,15 @@ export interface SignatureSize {
  * Conversion formula:
  * - pdfX = canvasX / scale
  * - pdfY = (canvasHeight / scale) - (canvasY / scale) - (signatureHeight / scale)
- * - pdfWidth = signatureWidth / scale
- * - pdfHeight = signatureHeight / scale
+ * - pdfWidth = signatureWidth * scale
+ * - pdfHeight = signatureHeight * scale
+ *
+ * Note: Signature dimensions ARE scaled by scale factor because:
+ * - The signature is displayed at CSS pixels on canvas (e.g., 400×150px)
+ * - The canvas is scaled up for display quality (e.g., 1.5x)
+ * - To match the visual size in PDF, we need to scale dimensions by same factor
+ * - Position coordinates are divided by scale (canvas → PDF)
+ * - Signature dimensions are multiplied by scale (CSS pixels → PDF points)
  *
  * @param canvasPosition - Position on canvas (x, y)
  * @param canvas - HTMLCanvasElement to get dimensions
@@ -61,16 +68,16 @@ export function convertCanvasToPdfCoordinates(
 ): PdfPosition {
   const canvasHeight = canvas.height;
   const canvasWidth = canvas.width;
-
   // Convert canvas coordinates to PDF coordinates
   const pdfX = canvasPosition.x / scale;
   const pdfY =
     canvasHeight / scale -
     canvasPosition.y / scale -
     signatureSize.height / scale;
-  const pdfWidth = signatureSize.width / scale;
-  const pdfHeight = signatureSize.height / scale;
 
+  // ✅ FIX: Scale signature dimensions by scale factor to match canvas display size
+  const pdfWidth = signatureSize.width * scale;
+  const pdfHeight = signatureSize.height * scale;
   return {
     x: pdfX,
     y: pdfY,

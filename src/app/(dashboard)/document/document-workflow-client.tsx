@@ -3,9 +3,7 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { FileSignature, LogOut, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import WorkflowSteps from "@/app/dashboard/components/workflow-steps";
+import WorkflowSteps from "@/app/(dashboard)/dashboard/components/workflow-steps";
 import Step3SubStepper from "./components/step-3-sub-stepper";
 import Step1Check from "./components/step-1-check";
 import Step2Upload from "./components/step-2-upload";
@@ -13,7 +11,6 @@ import Step3FillContent from "./components/step-3-fill-content";
 import Step3AddSignature from "./components/step-3-add-signature";
 import Step4FinalReview from "./components/step-4-final-review";
 import WorkflowNavigation from "./components/workflow-navigation";
-import { WorkflowHeader } from "@/components/layout/workflow-header";
 import { LoadingState } from "@/components/ui/loading-state";
 import {
   Step1FormData,
@@ -41,7 +38,6 @@ export default function DocumentWorkflowClient({
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const user = session.user;
 
   // Consolidated state management
   const { state, updateState, updateStep, setDocumentId } =
@@ -151,10 +147,6 @@ export default function DocumentWorkflowClient({
       });
     }
   }, [documentDataFetched, state.documentPdf, updateState]);
-
-  const handleSignOut = async () => {
-    router.push("/login");
-  };
 
   const handleCancel = () => {
     router.push("/dashboard");
@@ -389,11 +381,6 @@ export default function DocumentWorkflowClient({
   if (!documentDataFetched && initialDocumentId) {
     return (
       <div className="min-h-screen bg-white">
-        <WorkflowHeader
-          userName={user.name || user.email}
-          userEmail={user.email}
-          onSignOut={handleSignOut}
-        />
         <LoadingState message="Loading document..." fullScreen />
       </div>
     );
@@ -401,13 +388,6 @@ export default function DocumentWorkflowClient({
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <WorkflowHeader
-        userName={user.name || user.email}
-        userEmail={user.email}
-        onSignOut={handleSignOut}
-      />
-
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 md:px-6 md:py-12">
         {/* Workflow Steps Indicator */}

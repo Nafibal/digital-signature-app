@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileSignature, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import WorkflowSteps from "@/app/dashboard/components/workflow-steps";
+import WorkflowSteps from "@/app/(dashboard)/dashboard/components/workflow-steps";
 import Step3SubStepper from "./components/step-3-sub-stepper";
 import Step1Check from "./components/step-1-check";
 import Step2Upload from "./components/step-2-upload";
