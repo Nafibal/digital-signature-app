@@ -1,10 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { supabase } from "@/lib/supabase";
-import { embedSignatureIntoPdf } from "@/lib/utils/pdf-embed";
-import { PdfPosition } from "@/lib/utils/coordinates";
+import { signPdf as signPdfService } from "@/server/services";
 
 // POST /api/documents/[id]/sign-pdf
 // Embed signature into PDF and upload signed version
@@ -42,130 +39,20 @@ export async function POST(
       );
     }
 
-    // Validate that document belongs to user and has a current PDF
-    const existingDocument = await prisma.document.findFirst({
-      where: {
-        id: documentId,
-        ownerId: session.user.id,
-      },
-      include: {
-        currentPdf: true,
-      },
-    });
-
-    if (!existingDocument) {
-      return NextResponse.json(
-        { message: "Document not found" },
-        { status: 404 }
-      );
-    }
-
-    if (!existingDocument.currentPdfId) {
-      return NextResponse.json(
-        { message: "Document has no PDF to sign" },
-        { status: 400 }
-      );
-    }
-
-    // Use currentPdf (original/unsigned PDF) for signing
-    const existingPdf = existingDocument.currentPdf;
-
-    if (!existingPdf) {
-      return NextResponse.json(
-        { message: "PDF not found for this document" },
-        { status: 404 }
-      );
-    }
-
-    // Fetch original PDF bytes from Supabase Storage
-    const { data: pdfData, error: pdfError } = await supabase.storage
-      .from("documents")
-      .download(existingPdf.pdfPath);
-
-    if (pdfError || !pdfData) {
-      console.error("PDF download error:", pdfError);
-      return NextResponse.json(
-        { message: "Failed to download PDF" },
-        { status: 500 }
-      );
-    }
-
-    const pdfBytes = new Uint8Array(await pdfData.arrayBuffer());
-
-    // Embed signature into PDF
-    const signedPdfBytes = await embedSignatureIntoPdf(
-      pdfBytes,
+    // Sign PDF using service layer
+    const result = await signPdfService(documentId, session.user.id, {
       signatureImage,
-      position as PdfPosition
-    );
+      position,
+    });
 
-    // Generate unique filename for signed PDF
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 15);
-    const fileName = `signed-${timestamp}-${randomString}-${existingPdf.fileName}`;
-    const filePath = `${session.user.id}/signed/${fileName}`;
-
-    // Upload signed PDF to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("documents")
-      .upload(filePath, Buffer.from(signedPdfBytes), {
-        contentType: "application/pdf",
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (uploadError) {
-      console.error("Signed PDF upload error:", uploadError);
+    if (!result) {
       return NextResponse.json(
-        { message: "Failed to upload signed PDF" },
-        { status: 500 }
+        { message: "Document not found or has no PDF to sign" },
+        { status: 404 }
       );
     }
 
-    // Get public URL for signed PDF
-    const { data: publicUrlData } = supabase.storage
-      .from("documents")
-      .getPublicUrl(filePath);
-
-    // Create new DocumentPdf record for signed version
-    const signedPdf = await prisma.documentPdf.create({
-      data: {
-        documentId,
-        pdfPath: filePath,
-        fileName: existingPdf.fileName,
-        fileSize: signedPdfBytes.length,
-        pageCount: existingPdf.pageCount,
-        status: "signed",
-      },
-    });
-
-    // Update document's signed PDF reference and set currentStep to 4
-    await prisma.document.update({
-      where: { id: documentId },
-      data: {
-        signedPdfId: signedPdf.id,
-        currentStep: 4,
-      },
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        signedPdf: {
-          id: signedPdf.id,
-          documentId: signedPdf.documentId,
-          pdfPath: signedPdf.pdfPath,
-          fileName: signedPdf.fileName,
-          fileSize: signedPdf.fileSize,
-          pageCount: signedPdf.pageCount,
-          status: signedPdf.status,
-          publicUrl: publicUrlData.publicUrl,
-          createdAt: signedPdf.createdAt,
-          updatedAt: signedPdf.updatedAt,
-        },
-      },
-      { status: 201 }
-    );
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("[POST /api/documents/[id]/sign-pdf]", error);
     return NextResponse.json(

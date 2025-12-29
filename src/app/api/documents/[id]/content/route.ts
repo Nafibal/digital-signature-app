@@ -1,7 +1,10 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import {
+  saveDocumentContent,
+  getDocumentContentForUser,
+} from "@/server/services";
 
 // POST /api/documents/[id]/content
 // Create or update document content
@@ -39,52 +42,18 @@ export async function POST(
       );
     }
 
-    // Validate that document belongs to user
-    const existingDocument = await prisma.document.findFirst({
-      where: {
-        id: documentId,
-        ownerId: session.user.id,
-      },
-    });
+    // Save document content using service layer
+    const content = await saveDocumentContent(
+      documentId,
+      session.user.id,
+      htmlContent
+    );
 
-    if (!existingDocument) {
+    if (!content) {
       return NextResponse.json(
         { message: "Document not found" },
         { status: 404 }
       );
-    }
-
-    // Check if document already has content
-    const documentWithContent = await prisma.document.findUnique({
-      where: { id: documentId },
-      select: { currentContentId: true },
-    });
-
-    let content;
-
-    if (documentWithContent?.currentContentId) {
-      // Update existing content
-      content = await prisma.documentContent.update({
-        where: { id: documentWithContent.currentContentId },
-        data: {
-          htmlContent: htmlContent,
-        },
-      });
-    } else {
-      // Create new content (first time)
-      content = await prisma.documentContent.create({
-        data: {
-          documentId,
-          htmlContent: htmlContent,
-          version: 1,
-        },
-      });
-
-      // Update document's current content reference
-      await prisma.document.update({
-        where: { id: documentId },
-        data: { currentContentId: content.id },
-      });
     }
 
     return NextResponse.json(content, { status: 201 });
@@ -115,18 +84,13 @@ export async function GET(
 
     const documentId = (await params).id;
 
-    // Validate that document belongs to user
-    const existingDocument = await prisma.document.findFirst({
-      where: {
-        id: documentId,
-        ownerId: session.user.id,
-      },
-      include: {
-        currentContent: true,
-      },
-    });
+    // Get document content using service layer
+    const content = await getDocumentContentForUser(
+      documentId,
+      session.user.id
+    );
 
-    if (!existingDocument) {
+    if (!content) {
       return NextResponse.json(
         { message: "Document not found" },
         { status: 404 }
@@ -134,10 +98,7 @@ export async function GET(
     }
 
     // Return current content
-    return NextResponse.json(
-      { content: existingDocument.currentContent },
-      { status: 200 }
-    );
+    return NextResponse.json({ content }, { status: 200 });
   } catch (error) {
     console.error("[GET /api/documents/[id]/content]", error);
     return NextResponse.json(

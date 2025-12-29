@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { getDocumentPdfById } from "@/server/queries/documents";
 import { supabase } from "@/lib/supabase";
 
 // GET /api/documents/[id]/pdf/[pdfId]
@@ -11,7 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string; pdfId: string }> }
 ) {
   try {
-    // Authenticate the request
+    // Authenticate request
     const session = await auth.api.getSession({
       headers: await headers(),
     });
@@ -22,26 +22,21 @@ export async function GET(
 
     const { id: documentId, pdfId } = await params;
 
-    // Fetch document with PDF and ownership check
-    const document = await prisma.document.findFirst({
-      where: {
-        id: documentId,
-        ownerId: session.user.id,
-        currentPdfId: pdfId,
-      },
-      include: {
-        currentPdf: true,
-      },
-    });
+    // Fetch document PDF using query layer
+    const documentPdf = await getDocumentPdfById(
+      pdfId,
+      documentId,
+      session.user.id
+    );
 
-    if (!document || !document.currentPdf) {
+    if (!documentPdf) {
       return NextResponse.json({ message: "PDF not found" }, { status: 404 });
     }
 
     // Download PDF from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("documents")
-      .download(document.currentPdf.pdfPath);
+      .download(documentPdf.pdfPath);
 
     if (downloadError) {
       console.error("Error downloading PDF from Supabase:", downloadError);
@@ -56,7 +51,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${document.currentPdf.fileName}"`,
+        "Content-Disposition": `inline; filename="${documentPdf.fileName}"`,
         "Cache-Control": "public, max-age=3600",
       },
     });

@@ -2,8 +2,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { createDocumentSchema } from "./schema";
-import { prisma } from "@/lib/db";
-import { DocumentStatus } from "@/lib/generated/prisma";
+import { getAllDocumentsForUser, createNewDocument } from "@/server/services";
 
 export async function GET() {
   try {
@@ -17,24 +16,7 @@ export async function GET() {
     }
 
     // Fetch all documents for the authenticated user
-    const documents = await prisma.document.findMany({
-      where: {
-        ownerId: session.user.id,
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        documentType: true,
-        currentStep: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const documents = await getAllDocumentsForUser(session.user.id);
 
     // Response
     return NextResponse.json({ documents }, { status: 200 });
@@ -74,24 +56,12 @@ export async function POST(req: Request) {
 
     const { title, description, documentType } = parsed.data;
 
-    // Create document (workflow initialized at Step 2 since user will proceed to Step 2 after creation)
-    const document = await prisma.document.create({
-      data: {
-        ownerId: session.user.id,
-        title,
-        description,
-        documentType,
-        currentStep: 2,
-        status: DocumentStatus.draft,
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        documentType: true,
-        currentStep: true,
-        status: true,
-      },
+    // Create document using service layer
+    const document = await createNewDocument({
+      ownerId: session.user.id,
+      title,
+      description,
+      documentType,
     });
 
     // Response
