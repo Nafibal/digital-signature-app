@@ -37,23 +37,6 @@ export default function WorkflowNavigation({
 }: WorkflowNavigationProps) {
   const isLastStep = currentStep === 4;
   const isFirstStep = currentStep === 1;
-  const isStep3SubStep1 = currentStep === 3 && subStep === 1;
-
-  const getPreviousLabel = () => {
-    if (isStep3SubStep1) return "Back to Upload";
-    if (currentStep === 2) return "Back to Check";
-    if (currentStep === 3) return "Back to Fill Content";
-    if (currentStep === 4) return "Back to Signature";
-    return "Previous";
-  };
-
-  const getNextLabel = () => {
-    if (isStep3SubStep1) return "Add Signature";
-    if (currentStep === 3) return "Final Review";
-    if (currentStep === 2) return "Fill Content";
-    if (currentStep === 1) return "Upload Document";
-    return "Next";
-  };
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -65,8 +48,7 @@ export default function WorkflowNavigation({
           onClick={onCancel}
           className="gap-2"
         >
-          <X className="h-4 w-4" />
-          Cancel
+          Dashboard
         </Button>
         {!isFirstStep && (
           <Button
@@ -76,7 +58,7 @@ export default function WorkflowNavigation({
             className="gap-2"
           >
             <ChevronLeft className="h-4 w-4" />
-            {getPreviousLabel()}
+            Previous
           </Button>
         )}
       </div>
@@ -107,7 +89,7 @@ export default function WorkflowNavigation({
             disabled={!canProceed}
             className="gap-2"
           >
-            {getNextLabel()}
+            Next
             <ChevronRight className="h-4 w-4" />
           </Button>
         )}
