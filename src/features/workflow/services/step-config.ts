@@ -5,8 +5,8 @@
  * Each step's metadata, validation rules, and navigation behavior is defined here.
  */
 
-import { DocumentWorkflowState } from "@/lib/types/workflow";
-import { validateStep3aFormData } from "@/lib/types/document";
+import { validateStep3aFormData } from "@/features/document/types";
+import { DocumentWorkflowState } from "../types";
 
 export interface StepConfig {
   stepNumber: number;

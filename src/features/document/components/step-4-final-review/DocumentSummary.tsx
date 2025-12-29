@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import { Step1FormData, DOCUMENT_TYPE_LABELS } from "@/lib/types/document";
+import { Step1FormData, DOCUMENT_TYPE_LABELS } from "@/features/document/types";
 
 interface DocumentSummaryProps {
   documentData: Step1FormData;

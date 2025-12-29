@@ -8,9 +8,10 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import DocumentStatusBadge from "./document-status-badge";
-import WorkflowSteps from "./workflow-steps";
-import { Document } from "@/lib/api/documents";
+import DocumentStatusBadge from "./DocumentStatusBadge";
+import WorkflowSteps from "../workflow/WorkflowSteps";
+import { Document } from "@/features/document/services";
+import { memo, useCallback } from "react";
 
 interface DocumentCardProps {
   document: Document;
@@ -18,19 +19,19 @@ interface DocumentCardProps {
   onEdit?: (id: string) => void;
 }
 
-export default function DocumentCard({
+const DocumentCard = memo(function DocumentCard({
   document,
   onView,
   onEdit,
 }: DocumentCardProps) {
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
-  };
+  }, []);
 
   return (
     <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
@@ -76,4 +77,6 @@ export default function DocumentCard({
       </CardFooter>
     </Card>
   );
-}
+});
+
+export default DocumentCard;

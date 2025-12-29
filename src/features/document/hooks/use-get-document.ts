@@ -7,7 +7,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { getDocument, GetDocumentResponse } from "@/lib/api/documents";
+import type { DocumentResponse } from "@/features/document/types";
 
 interface UseGetDocumentOptions {
   /**
@@ -48,7 +48,16 @@ export function useGetDocument(
      * Query function that calls the API to fetch a single document
      * Only fetch if documentId exists
      */
-    queryFn: () => getDocument(documentId!),
+    queryFn: async () => {
+      const response = await fetch(`/api/documents/${documentId}`);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to fetch document");
+      }
+
+      return response.json();
+    },
     /**
      * Disable query if documentId is not provided
      */

@@ -1,13 +1,16 @@
 "use client";
 
-import { cn } from "@/lib/helpers";
+import { cn } from "@/lib/utils";
 import { DocumentStatus } from "@/features/document/services";
+import { memo } from "react";
 
 interface StatusBadgeProps {
   status: DocumentStatus;
 }
 
-export default function DocumentStatusBadge({ status }: StatusBadgeProps) {
+const DocumentStatusBadge = memo(function DocumentStatusBadge({
+  status,
+}: StatusBadgeProps) {
   return (
     <span
       className={cn(
@@ -22,4 +25,6 @@ export default function DocumentStatusBadge({ status }: StatusBadgeProps) {
       {status === "signed" && "Signed"}
     </span>
   );
-}
+});
+
+export default DocumentStatusBadge;

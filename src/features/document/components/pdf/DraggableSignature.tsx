@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, RefObject } from "react";
-import { SignaturePosition } from "@/lib/types/document";
+import { SignaturePosition } from "../../types";
 import Image from "next/image";
 
 interface DraggableSignatureProps {

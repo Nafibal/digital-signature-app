@@ -19,8 +19,8 @@ import {
   loadPdfDocument,
   renderPdfPage,
   getPdfPageCount,
-} from "@/lib/utils/pdf";
-import { DraggableSignature } from "@/components/pdf";
+} from "@/lib/helpers";
+import { DraggableSignature } from "../pdf";
 
 interface PdfPreviewPanelProps {
   documentPdf: DocumentPdfResponse | null;
@@ -81,6 +81,10 @@ export default function PdfPreviewPanel({
 
     const renderPdf = async () => {
       try {
+        if (!documentPdf.publicUrl) {
+          throw new Error("PDF public URL is not available");
+        }
+
         const pdfDoc = await loadPdfDocument(documentPdf.publicUrl);
 
         // Get total pages

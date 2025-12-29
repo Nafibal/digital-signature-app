@@ -1,3 +1,24 @@
+/**
+ * Auth Types
+ *
+ * Type definitions for authentication-related data structures
+ */
+
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
+export interface Session {
+  user: User;
+  session: {
+    id: string;
+    userId: string;
+    expiresAt: Date;
+  };
+}
+
 export interface LoginFormData {
   email: string;
   password: string;
@@ -9,14 +30,8 @@ export interface SignupFormData {
   password: string;
 }
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-}
-
 export interface AuthResponse {
   success: boolean;
+  user?: User;
   error?: string;
-  user?: AuthUser;
 }

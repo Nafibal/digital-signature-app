@@ -9,10 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TabSwitcher } from "./step-2-upload/tab-switcher";
-import { UploadZone } from "./step-2-upload/upload-zone";
-import { FilePreview } from "./step-2-upload/file-preview";
-import { CreateMode } from "./step-2-upload/create-mode";
+import { TabSwitcher } from "./step-2-upload/TabSwitcher";
+import { UploadZone } from "./step-2-upload/UploadZone";
+import { FilePreview } from "./step-2-upload/FilePreview";
+import { CreateMode } from "./step-2-upload/CreateMode";
 
 interface Step2UploadProps {
   uploadMode: "upload" | "create";

@@ -6,9 +6,11 @@
  * making the code easier to test, maintain, and understand.
  */
 
-import { DocumentWorkflowState } from "@/lib/types/workflow";
-import { CreateDocumentRequest } from "@/lib/api/documents";
-import { UpdateDocumentRequest } from "@/lib/api/documents";
+import {
+  CreateDocumentRequest,
+  UpdateDocumentRequest,
+} from "@/features/document";
+import { DocumentWorkflowState } from "../types";
 
 /**
  * Dependencies required by step handlers
@@ -18,11 +20,17 @@ export interface StepHandlerDependencies {
   updateState: (updates: Partial<DocumentWorkflowState>) => void;
   updateStep: (step: number, updates?: Partial<DocumentWorkflowState>) => void;
   createDocument: (data: CreateDocumentRequest) => void;
-  updateDocument: (data: { id: string } & UpdateDocumentRequest) => void;
+  updateDocument: (data: { id: string } & Record<string, unknown>) => void;
   saveContent: (data: { documentId: string; htmlContent: string }) => void;
   resetDocumentCreation: () => void;
   resetDocumentUpdate: () => void;
 }
+
+/**
+ * Type alias for update document data
+ * Matches the type expected by useUpdateDocument mutation
+ */
+export type UpdateDocumentData = { id: string } & UpdateDocumentRequest;
 
 /**
  * Step handler interface
@@ -159,9 +167,11 @@ async function handleStep2(
       currentStep: 3,
     });
   } else if (state.uploadMode === "upload") {
-    // Upload mode - not implemented in this scenario
-    // Just proceed to step 3
-    deps.updateStep(3);
+    // Upload mode - not implemented yet
+    // Show error to user instead of silently proceeding
+    deps.updateState({
+      documentCreationError: new Error("Upload mode is not yet implemented"),
+    });
     return;
   }
 
@@ -186,14 +196,20 @@ async function handleStep3(
   if (state.subStep === 1) {
     // Auto-save content and generate PDF before proceeding to signature step
     if (state.createdDocumentId) {
+      let pdfGenerationSucceeded = false;
+
       try {
         deps.updateState({ isGeneratingPdf: true, pdfGenerationError: null });
 
-        // 1. Save HTML content to database
-        await deps.saveContent({
-          documentId: state.createdDocumentId,
-          htmlContent: state.content.html,
-        });
+        // 1. Save HTML content to database (with null check)
+        if (state.content?.html) {
+          await deps.saveContent({
+            documentId: state.createdDocumentId,
+            htmlContent: state.content.html,
+          });
+        } else {
+          throw new Error("Document content is missing or empty");
+        }
 
         // 2. Generate PDF and upload to Supabase
         const pdfResponse = await fetch(
@@ -223,6 +239,8 @@ async function handleStep3(
         // 2. Invalidating the query causes a race condition where it refetches before
         //    the database update completes, resulting in currentPdf being null
         // 3. The PDF state is already correctly set from pdfResult
+
+        pdfGenerationSucceeded = true;
       } catch (error) {
         console.error("Failed to generate PDF or save content:", error);
         deps.updateState({
@@ -233,8 +251,12 @@ async function handleStep3(
       } finally {
         deps.updateState({ isGeneratingPdf: false });
       }
+
+      // Only proceed to sub-step 2 if PDF generation succeeded
+      if (pdfGenerationSucceeded) {
+        deps.updateState({ subStep: 2 });
+      }
     }
-    deps.updateState({ subStep: 2 });
   } else {
     // Sub-step 2: Navigate to step 4
     deps.updateStep(4);

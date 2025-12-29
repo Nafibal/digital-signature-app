@@ -7,10 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Step1FormData, SignaturePosition } from "@/lib/types/document";
-import { GetDocumentResponse } from "@/lib/api/documents";
-import DocumentSummary from "./step-4-final-review/document-summary";
-import SignedPdfPreview from "./step-4-final-review/signed-pdf-preview";
+import { Step1FormData, SignaturePosition } from "@/features/document/types";
+import { GetDocumentResponse } from "@/features/document/services";
+import { getPdfUrlFromDocumentPdf } from "@/features/document/utils/pdf-url";
+import DocumentSummary from "./step-4-final-review/DocumentSummary";
+import SignedPdfPreview from "./step-4-final-review/SignedPdfPreview";
 
 interface Step4FinalReviewProps {
   documentData: Step1FormData;
@@ -25,8 +26,11 @@ export default function Step4FinalReview({
   signaturePosition,
   documentDataFetched,
 }: Step4FinalReviewProps) {
-  // Extract signed PDF URL from database data (single source of truth)
-  const finalPdfUrl = documentDataFetched?.signedPdf?.publicUrl || "";
+  // Extract signed PDF URL using utility function (single source of truth)
+  const finalPdfUrl = getPdfUrlFromDocumentPdf(
+    documentDataFetched?.signedPdf || null,
+    documentDataFetched?.id || ""
+  );
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",

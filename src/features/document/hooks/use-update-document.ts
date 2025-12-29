@@ -6,17 +6,13 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  updateDocument,
-  UpdateDocumentRequest,
-  UpdateDocumentResponse,
-} from "@/lib/api/documents";
+import type { DocumentResponse } from "@/features/document/types";
 
 interface UseUpdateDocumentOptions {
   /**
    * Callback function called when document update is successful
    */
-  onSuccess?: (data: UpdateDocumentResponse) => void;
+  onSuccess?: (data: DocumentResponse) => void;
   /**
    * Callback function called when document update fails
    */
@@ -48,10 +44,28 @@ export function useUpdateDocument(options?: UseUpdateDocumentOptions) {
 
   const mutation = useMutation({
     /**
-     * Mutation function that calls the API to update a document
+     * Mutation function that calls the service to update a document
      */
-    mutationFn: ({ id, ...data }: UpdateDocumentRequest & { id: string }) =>
-      updateDocument(id, data),
+    mutationFn: async ({
+      id,
+      ...data
+    }: { id: string } & Record<string, unknown>) => {
+      // Call the API route instead of importing server code
+      const response = await fetch(`/api/documents/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update document");
+      }
+
+      return response.json();
+    },
 
     /**
      * Called when mutation succeeds

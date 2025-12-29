@@ -1,6 +1,6 @@
 import { RichTextEditorRef } from "../editor/RichTextEditor";
 import RichTextEditor from "../editor/RichTextEditor";
-import { Step3aFormData } from "@/lib/types/document";
+import { Step3aFormData } from "../../types";
 
 interface EditorPanelProps {
   editorRef: React.RefObject<RichTextEditorRef | null>;

@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import DocumentList from "./components/document-list";
-import { useGetAllDocuments } from "@/lib/hooks/use-get-all-documents";
+import DocumentList from "@/features/document/components/dashboard/DocumentList";
+import { useGetAllDocuments } from "@/features/document/hooks/use-get-all-documents";
 
-type Session = typeof import("@/lib/auth").auth.$Infer.Session;
+type Session = typeof import("@/server/auth/config").auth.$Infer.Session;
 
 export default function DashboardClientPage({ session }: { session: Session }) {
   const router = useRouter();

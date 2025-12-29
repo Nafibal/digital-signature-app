@@ -1,5 +1,5 @@
 import { FileText, CheckCircle2, AlertCircle } from "lucide-react";
-import { SignaturePosition } from "@/lib/types/document";
+import { SignaturePosition } from "../../types";
 
 interface PdfPreviewSectionProps {
   signature: string | null;

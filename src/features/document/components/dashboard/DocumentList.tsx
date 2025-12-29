@@ -2,9 +2,10 @@
 
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import DocumentCard from "./document-card";
-import EmptyState from "./empty-state";
-import { Document } from "@/lib/api/documents";
+import DocumentCard from "./DocumentCard";
+import EmptyState from "./EmptyState";
+import { Document } from "@/features/document/services";
+import { useCallback, memo } from "react";
 
 interface DocumentListProps {
   documents?: Document[];
@@ -13,13 +14,27 @@ interface DocumentListProps {
   onEditDocument?: (id: string) => void;
 }
 
-export default function DocumentList({
+const DocumentList = memo(function DocumentList({
   documents = [],
   onCreateDocument,
   onViewDocument,
   onEditDocument,
 }: DocumentListProps) {
   const hasDocuments = documents && documents.length > 0;
+
+  const handleView = useCallback(
+    (id: string) => {
+      onViewDocument?.(id);
+    },
+    [onViewDocument]
+  );
+
+  const handleEdit = useCallback(
+    (id: string) => {
+      onEditDocument?.(id);
+    },
+    [onEditDocument]
+  );
 
   return (
     <div className="space-y-6">
@@ -39,8 +54,8 @@ export default function DocumentList({
             <DocumentCard
               key={document.id}
               document={document}
-              onView={onViewDocument}
-              onEdit={onEditDocument}
+              onView={handleView}
+              onEdit={handleEdit}
             />
           ))}
         </div>
@@ -49,4 +64,6 @@ export default function DocumentList({
       )}
     </div>
   );
-}
+});
+
+export default DocumentList;

@@ -9,9 +9,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
-import { Step1FormData } from "@/lib/types/document";
-import { FormSection } from "./step-1-check/form-section";
-import { StatusSection } from "./step-1-check/status-section";
+import { Step1FormData } from "@/features/document/types";
+import { FormSection } from "./step-1-check/FormSection";
+import { StatusSection } from "./step-1-check/StatusSection";
 
 interface Step1CheckProps {
   defaultValues?: Step1FormData;

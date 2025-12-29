@@ -1,12 +1,15 @@
 "use client";
 import { FileSignature, GalleryVerticalEnd } from "lucide-react";
 
-import { SignupForm, SignupFormData } from "@/components/signup-form";
+import {
+  SignupForm,
+  SignupFormData,
+} from "@/features/auth/components/SignupForm";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { useSearchParams } from "next/navigation";
-import { signUp } from "@/lib/actions/auth-actions";
+import { signUp } from "@/features/auth/services";
 import Image from "next/image";
 
 export default function SignupClientPage() {
@@ -20,7 +23,7 @@ export default function SignupClientPage() {
     setError("");
 
     try {
-      const result = await signUp(data.email, data.password, data.name);
+      const result = await signUp(data);
       if (!result.user) {
         setError("Failed to create account");
       }

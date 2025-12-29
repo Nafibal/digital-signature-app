@@ -15,7 +15,7 @@ import {
   renderPdfPage,
   PDF_SCALE,
   getPdfPageCount,
-} from "@/lib/utils/pdf";
+} from "@/lib/helpers";
 
 interface SignedPdfPreviewProps {
   finalPdfUrl: string;

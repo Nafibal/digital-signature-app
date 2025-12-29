@@ -7,7 +7,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { getAllDocuments, Document } from "@/lib/api/documents";
+import { getAllDocuments, Document } from "@/features/document/services";
 
 interface UseGetAllDocumentsOptions {
   /**

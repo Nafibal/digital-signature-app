@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
-import { Step3bFormData, DEFAULT_ORGANIZATIONS } from "@/lib/types/document";
+import {
+  Step3bFormData,
+  DEFAULT_ORGANIZATIONS,
+} from "@/features/document/types";
 
 interface SignatureFormProps {
   register: UseFormRegister<Step3bFormData>;

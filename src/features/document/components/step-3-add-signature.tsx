@@ -94,7 +94,7 @@ export default function Step3AddSignature({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Use sign PDF mutation
-  const { mutate: signPdf } = useSignPdf();
+  const { mutateAsync: signPdf } = useSignPdf();
 
   // Auto-generate signature when all fields are selected
   useEffect(() => {

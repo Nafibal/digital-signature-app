@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/config";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { createDocumentSchema } from "./schema";
@@ -60,8 +60,8 @@ export async function POST(req: Request) {
     const document = await createNewDocument({
       ownerId: session.user.id,
       title,
-      description,
-      documentType,
+      description: description ?? "",
+      documentType: documentType ?? "contract",
     });
 
     // Response

@@ -78,6 +78,7 @@ export interface DocumentPdf {
   fileSize: number;
   pageCount?: number;
   status: string;
+  publicUrl: string | null;
 }
 
 /**

@@ -26,7 +26,7 @@ import {
 function getPublicUrl(pdfPath: string | null): string | null {
   if (!pdfPath) return null;
   const { data } = supabase.storage.from("documents").getPublicUrl(pdfPath);
-  return data.publicUrl;
+  return data.publicUrl || null;
 }
 
 /**
@@ -76,7 +76,30 @@ export async function createNewDocument(data: {
   description: string;
   documentType: string;
 }) {
-  return await createDocument(data);
+  const document = await createDocument(data);
+
+  // Transform response to include public URL and convert dates to strings
+  return {
+    ...document,
+    currentPdf: document.currentPdf
+      ? {
+          ...document.currentPdf,
+          publicUrl: getPublicUrl(document.currentPdf.pdfPath),
+          createdAt: document.currentPdf.createdAt.toISOString(),
+          updatedAt: document.currentPdf.updatedAt.toISOString(),
+        }
+      : null,
+    signedPdf: document.signedPdf
+      ? {
+          ...document.signedPdf,
+          publicUrl: getPublicUrl(document.signedPdf.pdfPath),
+          createdAt: document.signedPdf.createdAt.toISOString(),
+          updatedAt: document.signedPdf.updatedAt.toISOString(),
+        }
+      : null,
+    createdAt: document.createdAt.toISOString(),
+    updatedAt: document.updatedAt.toISOString(),
+  };
 }
 
 /**
@@ -106,26 +129,33 @@ export async function updateDocumentForUser(
   });
 
   if (!existingDocument) {
-    return null;
+    throw new Error("Document not found or access denied");
   }
 
   const updatedDocument = await updateDocument(documentId, data);
 
-  // Transform response to include public URL
+  // Transform response to include public URL and add ownerId
   return {
     ...updatedDocument,
+    ownerId: existingDocument.ownerId,
     currentPdf: updatedDocument.currentPdf
       ? {
           ...updatedDocument.currentPdf,
           publicUrl: getPublicUrl(updatedDocument.currentPdf.pdfPath),
+          createdAt: updatedDocument.currentPdf.createdAt.toISOString(),
+          updatedAt: updatedDocument.currentPdf.updatedAt.toISOString(),
         }
       : null,
     signedPdf: updatedDocument.signedPdf
       ? {
           ...updatedDocument.signedPdf,
           publicUrl: getPublicUrl(updatedDocument.signedPdf.pdfPath),
+          createdAt: updatedDocument.signedPdf.createdAt.toISOString(),
+          updatedAt: updatedDocument.signedPdf.updatedAt.toISOString(),
         }
       : null,
+    createdAt: updatedDocument.createdAt.toISOString(),
+    updatedAt: updatedDocument.updatedAt.toISOString(),
   };
 }
 

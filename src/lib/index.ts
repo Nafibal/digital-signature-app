@@ -1,4 +1,4 @@
-export { cn } from "./helpers";
+export { cn } from "./utils";
 export { uploadPDF, getPublicUrl, deleteFile } from "./helpers";
 export {
   convertCanvasToPdfCoordinates,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, memo } from "react";
 import { FileText } from "lucide-react";
 import PdfViewer from "./PdfViewer";
 
@@ -25,9 +25,9 @@ interface PDFDocumentRendererProps {
  * This component is responsible only for rendering - it does not fetch PDF data.
  * PDF data should be provided via props by a parent component.
  *
- * It converts ArrayBuffer to Blob URL for consumption by the PdfViewer component.
+ * It converts ArrayBuffer to Blob URL for consumption by PdfViewer component.
  */
-export default function PDFDocumentRenderer({
+const PDFDocumentRenderer = memo(function PDFDocumentRenderer({
   pdfData,
   isLoading,
   error,
@@ -88,4 +88,6 @@ export default function PDFDocumentRenderer({
 
   // PDF loaded state - delegate to canvas-based PdfViewer
   return <PdfViewer url={blobUrl} scale={1.5} />;
-}
+});
+
+export default PDFDocumentRenderer;

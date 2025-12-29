@@ -7,7 +7,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Step1FormData } from "@/lib/types/document";
+import { Step1FormData } from "../../types";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 
 interface FormSectionProps {

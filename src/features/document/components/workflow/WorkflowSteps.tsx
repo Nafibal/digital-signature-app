@@ -1,7 +1,8 @@
 "use client";
 
 import { CheckCircle2, Circle } from "lucide-react";
-import { cn } from "@/lib/helpers";
+import { cn } from "@/lib/utils";
+import { memo } from "react";
 
 interface WorkflowStepsProps {
   currentStep: number; // 1-4
@@ -14,7 +15,9 @@ const steps = [
   { number: 4, label: "Final Review" },
 ];
 
-export default function WorkflowSteps({ currentStep }: WorkflowStepsProps) {
+const WorkflowSteps = memo(function WorkflowSteps({
+  currentStep,
+}: WorkflowStepsProps) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {steps.map((step, index) => {
@@ -65,4 +68,6 @@ export default function WorkflowSteps({ currentStep }: WorkflowStepsProps) {
       })}
     </div>
   );
-}
+});
+
+export default WorkflowSteps;

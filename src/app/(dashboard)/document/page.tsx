@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/config";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import DocumentWorkflowClient from "./document-workflow-client";
+import { DocumentWorkflowClient } from "@/features/document/components/workflow";
 
 export default async function DocumentPage() {
   const session = await auth.api.getSession({

@@ -307,9 +307,9 @@ export interface DocumentPdfResponse {
   pdfPath: string;
   fileName: string;
   fileSize: number;
-  pageCount?: number;
+  pageCount?: number | null;
   status: string;
-  publicUrl: string;
+  publicUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -7,8 +7,8 @@
  */
 
 import { useMemo } from "react";
-import { DocumentWorkflowState } from "@/lib/types/workflow";
-import { validateStep3aFormData } from "@/lib/types/document";
+import { DocumentWorkflowState } from "@/features/workflow/types";
+import { validateStep3aFormData } from "@/features/document/types";
 
 export interface WorkflowValidators {
   isStep1Valid: boolean;

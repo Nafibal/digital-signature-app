@@ -1,4 +1,4 @@
-import { Step3bFormData } from "@/lib/types/document";
+import { Step3bFormData } from "../../types";
 
 interface SignaturePreviewProps {
   signatureData: Step3bFormData | null;

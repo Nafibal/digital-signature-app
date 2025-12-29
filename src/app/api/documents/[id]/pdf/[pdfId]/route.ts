@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/config";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getDocumentPdfById } from "@/server/queries/documents";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/server/storage/supabase";
 
 // GET /api/documents/[id]/pdf/[pdfId]
 // Proxy endpoint to serve PDF from Supabase Storage

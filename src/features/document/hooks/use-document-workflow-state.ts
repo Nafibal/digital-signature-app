@@ -7,12 +7,12 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useGetDocument } from "./use-get-document";
+import { GetDocumentResponse } from "../services";
 import {
   DocumentWorkflowState,
   UseDocumentWorkflowStateOptions,
   UseDocumentWorkflowStateReturn,
-} from "@/lib/types/workflow";
-import { Step3aFormData } from "@/lib/types/document";
+} from "@/features/workflow";
 
 /**
  * Custom hook for managing document workflow state
@@ -40,7 +40,7 @@ export function useDocumentWorkflowState({
     subStep: 1,
 
     // Document data
-    createdDocumentId: initialDocumentId || null,
+    createdDocumentId: null, // Always start as null, separate from initialDocumentId for edit mode
     documentDataFetched: null,
 
     // Step 1 state
@@ -114,16 +114,6 @@ export function useDocumentWorkflowState({
     }
   }, [documentDataFetched]);
 
-  // Update createdDocumentId in state when it changes
-  useEffect(() => {
-    if (createdDocumentId !== state.createdDocumentId) {
-      setState((prev) => ({
-        ...prev,
-        createdDocumentId,
-      }));
-    }
-  }, [createdDocumentId]);
-
   /**
    * Update state with partial updates
    * This allows updating only specific parts of the state
@@ -158,14 +148,17 @@ export function useDocumentWorkflowState({
   /**
    * Set created document ID
    * This is a convenience method for setting the document ID after creation
+   * Updates both the local state and the workflow state atomically
    */
-  const setDocumentId = useCallback(
-    (id: string) => {
-      setCreatedDocumentId(id);
-      updateState({ createdDocumentId: id });
-    },
-    [updateState]
-  );
+  const setDocumentId = useCallback((id: string) => {
+    setCreatedDocumentId(id);
+    // Use updateState directly instead of relying on useEffect
+    // This ensures atomic update and avoids race conditions
+    setState((prev) => ({
+      ...prev,
+      createdDocumentId: id,
+    }));
+  }, []);
 
   return {
     state,

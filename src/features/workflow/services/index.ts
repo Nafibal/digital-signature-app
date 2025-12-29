@@ -4,4 +4,8 @@ export {
   getNextLabel,
   shouldShowPrevious,
 } from "./step-config";
-export { createStepHandler } from "./step-handlers";
+export {
+  createStepHandler,
+  type StepHandlerDependencies,
+  type StepHandler,
+} from "./step-handlers";

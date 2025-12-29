@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth/config";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/server/storage/supabase";
 import { saveSignature, getDocumentSignaturesForUser } from "@/server/services";
 
 // POST /api/documents/[id]/signature

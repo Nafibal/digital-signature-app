@@ -1,12 +1,12 @@
 "use client";
 import { FileSignature, GalleryVerticalEnd } from "lucide-react";
 
-import { LoginForm, LoginFormData } from "@/components/login-form";
+import { LoginForm, LoginFormData } from "@/features/auth/components/LoginForm";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { useSearchParams } from "next/navigation";
-import { signIn, signUp } from "@/lib/actions/auth-actions";
+import { signIn, signUp } from "@/features/auth/services";
 import Image from "next/image";
 
 export default function LoginClientPage() {
@@ -20,7 +20,7 @@ export default function LoginClientPage() {
     setError("");
 
     try {
-      const result = await signIn(data.email, data.password);
+      const result = await signIn(data);
       if (!result.user) {
         setError("Invalid email or password");
       }

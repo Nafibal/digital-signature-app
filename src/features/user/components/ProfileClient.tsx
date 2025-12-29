@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-type Session = typeof import("@/lib/auth").auth.$Infer.Session;
+type Session = typeof import("@/server/auth/config").auth.$Infer.Session;
 
 export default function ProfileClient({ session }: { session: Session }) {
   const user = session.user;

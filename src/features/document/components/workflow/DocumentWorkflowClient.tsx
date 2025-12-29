@@ -3,14 +3,14 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import WorkflowSteps from "@/app/(dashboard)/dashboard/components/workflow-steps";
-import Step3SubStepper from "./components/step-3-sub-stepper";
-import Step1Check from "./components/step-1-check";
-import Step2Upload from "./components/step-2-upload";
-import Step3FillContent from "./components/step-3-fill-content";
-import Step3AddSignature from "./components/step-3-add-signature";
-import Step4FinalReview from "./components/step-4-final-review";
-import WorkflowNavigation from "./components/workflow-navigation";
+import WorkflowSteps from "./WorkflowSteps";
+import Step3SubStepper from "../step-3-sub-stepper";
+import Step1Check from "../step-1-check";
+import Step2Upload from "../step-2-upload";
+import Step3FillContent from "../step-3-fill-content";
+import Step3AddSignature from "../step-3-add-signature";
+import Step4FinalReview from "../step-4-final-review";
+import WorkflowNavigation from "../workflow-navigation";
 import { LoadingState } from "@/components/feedback/LoadingState";
 import {
   Step1FormData,
@@ -18,16 +18,15 @@ import {
   Step3bFormData,
   SignaturePosition,
   validateStep3aFormData,
-} from "@/lib/types/document";
-import { useCreateDocument } from "@/lib/hooks/use-create-document";
-import { useGetContent } from "@/lib/hooks/use-get-content";
-import { useDocumentWorkflowState } from "@/lib/hooks/use-document-workflow-state";
-import { useUpdateDocument } from "@/lib/hooks/use-update-document";
-import { useSaveContent } from "@/lib/hooks/use-save-content";
-import { useWorkflowValidators } from "@/lib/utils/workflow-validators";
-import { createStepHandler } from "@/lib/workflow/step-handlers";
-
-type Session = typeof import("@/lib/auth").auth.$Infer.Session;
+} from "@/features/document/types";
+import { useCreateDocument } from "@/features/document/hooks/use-create-document";
+import { useGetContent } from "@/features/document/hooks/use-get-content";
+import { useDocumentWorkflowState } from "@/features/document/hooks/use-document-workflow-state";
+import { useUpdateDocument } from "@/features/document/hooks/use-update-document";
+import { useSaveContent } from "@/features/document/hooks/use-save-content";
+import { useWorkflowValidators } from "@/features/workflow/hooks/use-workflow-validators";
+import { createStepHandler } from "@/features/workflow/services/step-handlers";
+import type { Session } from "@/features/auth/types";
 
 export default function DocumentWorkflowClient({
   session,
@@ -111,10 +110,10 @@ export default function DocumentWorkflowClient({
 
   // Initialize content from fetched document content
   useEffect(() => {
-    if (contentData?.content?.htmlContent) {
+    if (contentData?.htmlContent) {
       updateState({
         content: {
-          html: contentData.content.htmlContent,
+          html: contentData.htmlContent,
         },
       });
     }
@@ -148,10 +147,13 @@ export default function DocumentWorkflowClient({
     }
 
     // Update signed PDF URL when document is signed (runs on every refetch)
-    if (documentDataFetched?.signedPdf?.publicUrl) {
-      updateState({
-        finalPdfUrl: documentDataFetched.signedPdf.publicUrl,
-      });
+    if (documentDataFetched?.signedPdf) {
+      const signedPdfUrl = documentDataFetched.signedPdf.publicUrl || "";
+      if (signedPdfUrl) {
+        updateState({
+          finalPdfUrl: signedPdfUrl,
+        });
+      }
     }
   }, [documentDataFetched, updateState]);
 

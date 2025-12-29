@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Step3aFormData } from "@/lib/types/document";
+import { Step3aFormData } from "@/features/document/types";
 import { RichTextEditorRef } from "./editor/RichTextEditor";
-import EditorPanel from "./step-3-fill-content/editor-panel";
-import PreviewPanel from "./step-3-fill-content/preview-panel";
+import EditorPanel from "./step-3-fill-content/EditorPanel";
+import PreviewPanel from "./step-3-fill-content/PreviewPanel";
 
 interface Step3FillContentProps {
   content: Step3aFormData;

@@ -6,11 +6,21 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createDocument,
-  CreateDocumentRequest,
-  CreateDocumentResponse,
-} from "@/lib/api/documents";
+import type { DocumentResponse } from "@/features/document/types";
+
+/**
+ * Request type for creating a document
+ */
+export interface CreateDocumentRequest {
+  title: string;
+  description?: string;
+  documentType?: string;
+}
+
+/**
+ * Response type for document creation
+ */
+export type CreateDocumentResponse = DocumentResponse;
 
 interface UseCreateDocumentOptions {
   /**
@@ -40,7 +50,7 @@ interface UseCreateDocumentOptions {
  *   onError: (error) => console.error('Failed:', error.message)
  * });
  *
- * mutate({ title: 'My Document', documentType: 'contract' });
+ * mutate({ ownerId: 'user-123', title: 'My Document', description: '...', documentType: 'contract' });
  * ```
  */
 export function useCreateDocument(options?: UseCreateDocumentOptions) {
@@ -50,7 +60,22 @@ export function useCreateDocument(options?: UseCreateDocumentOptions) {
     /**
      * Mutation function that calls the API to create a document
      */
-    mutationFn: (data: CreateDocumentRequest) => createDocument(data),
+    mutationFn: async (data: CreateDocumentRequest) => {
+      const response = await fetch("/api/documents", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create document");
+      }
+
+      return response.json();
+    },
 
     /**
      * Called when mutation succeeds

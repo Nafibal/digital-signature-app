@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, Circle } from "lucide-react";
-import { cn } from "@/lib/helpers";
+import { cn } from "@/lib/utils";
 
 interface Step3SubStepperProps {
   currentSubStep: number; // 1 or 2

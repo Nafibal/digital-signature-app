@@ -5,6 +5,7 @@ import type {
   SignaturePosition,
   DocumentPdfResponse,
 } from "../document/types";
+import type { GetDocumentResponse } from "../document/services";
 
 /**
  * Step 1 form state wrapper
@@ -26,7 +27,7 @@ export interface DocumentWorkflowState {
 
   // Document data
   createdDocumentId: string | null;
-  documentDataFetched: Record<string, unknown> | null;
+  documentDataFetched: GetDocumentResponse | null;
 
   // Step 1 state
   step1FormState: Step1FormState | null;
@@ -83,38 +84,4 @@ export interface UseDocumentWorkflowStateReturn {
   updateState: (updates: WorkflowStateUpdate) => void;
   updateStep: (step: number, updates?: WorkflowStateUpdate) => void;
   setDocumentId: (id: string) => void;
-}
-
-/**
- * Step configuration interface
- */
-export interface StepConfig {
-  stepNumber: number;
-  title: string;
-  description: string;
-  canProceed: (state: DocumentWorkflowState) => boolean;
-  nextLabel: string | ((state: DocumentWorkflowState) => string);
-  previousLabel: string;
-  showPrevious: boolean;
-}
-
-/**
- * Dependencies required by step handlers
- */
-export interface StepHandlerDependencies {
-  updateState: (updates: Partial<DocumentWorkflowState>) => void;
-  updateStep: (step: number, updates?: Partial<DocumentWorkflowState>) => void;
-  createDocument: (data: Record<string, unknown>) => void;
-  updateDocument: (data: Record<string, unknown>) => void;
-  saveContent: (data: Record<string, unknown>) => void;
-  resetDocumentCreation: () => void;
-  resetDocumentUpdate: () => void;
-}
-
-/**
- * Step handler interface
- */
-export interface StepHandler {
-  handleNext: () => Promise<void>;
-  handlePrevious: () => void;
 }

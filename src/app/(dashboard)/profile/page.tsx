@@ -1,5 +1,5 @@
-import { auth } from "@/lib/auth";
-import ProfileClient from "./profile-client";
+import { auth } from "@/server/auth/config";
+import ProfileClient from "@/features/user/components/ProfileClient";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 

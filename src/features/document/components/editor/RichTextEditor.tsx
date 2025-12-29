@@ -6,7 +6,7 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import EditorToolbar from "./EditorToolbar";
 import { useEffect, forwardRef, useImperativeHandle } from "react";
-import { TiptapJson, TiptapNode } from "@/lib/types/document";
+import { TiptapJson, TiptapNode } from "../../types";
 
 interface RichTextEditorProps {
   onUpdate: (content: { html: string; json: TiptapJson }) => void;
