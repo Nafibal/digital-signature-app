@@ -409,6 +409,11 @@ export default function Step3AddSignature({
       // Update state to show PDF is signed
       setIsPdfSigned(true);
 
+      // Update workflow state to enable Next button
+      if (onPdfSigned) {
+        onPdfSigned("signed");
+      }
+
       // Note: The signed PDF URL will be updated via the onSuccess callback in the hook
       // which invalidates document queries and triggers a refetch
     } catch (error) {
