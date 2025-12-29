@@ -19,6 +19,7 @@ import {
   convertCanvasToPdfCoordinates,
   convertPdfToCanvasCoordinates,
   clampPosition,
+  CanvasPosition,
 } from "@/lib/utils/coordinates";
 import SignatureForm from "./step-3-add-signature/signature-form";
 import SignaturePreview from "./step-3-add-signature/signature-preview";
@@ -81,6 +82,12 @@ export default function Step3AddSignature({
   const [isSigningPdf, setIsSigningPdf] = useState<boolean>(false);
   const [signPdfError, setSignPdfError] = useState<string | null>(null);
   const [isPdfSigned, setIsPdfSigned] = useState<boolean>(false);
+
+  // Visual position for display (separate from canvas pixel position for PDF)
+  const [visualPosition, setVisualPosition] = useState<CanvasPosition>({
+    x: 0,
+    y: 0,
+  });
 
   // Refs
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -166,6 +173,23 @@ export default function Step3AddSignature({
           y: mostRecentSignature.canvasPosY,
           page: mostRecentSignature.pageNumber,
         });
+
+        // Convert canvas pixel position to visual position for display
+        if (containerRef.current) {
+          const canvas = containerRef.current.querySelector(
+            "canvas"
+          ) as HTMLCanvasElement | null;
+
+          if (canvas) {
+            const scaleX = canvas.getBoundingClientRect().width / canvas.width;
+            const scaleY =
+              canvas.getBoundingClientRect().height / canvas.height;
+            setVisualPosition({
+              x: mostRecentSignature.canvasPosX * scaleX,
+              y: mostRecentSignature.canvasPosY * scaleY,
+            });
+          }
+        }
       } else {
         // Fallback: Convert PDF coordinates to canvas coordinates
         // (for existing signatures that don't have canvas coordinates)
@@ -192,6 +216,16 @@ export default function Step3AddSignature({
                 y: canvasPosition.y,
                 page: mostRecentSignature.pageNumber,
               });
+
+              // Convert canvas pixel position to visual position for display
+              const scaleX =
+                canvas.getBoundingClientRect().width / canvas.width;
+              const scaleY =
+                canvas.getBoundingClientRect().height / canvas.height;
+              setVisualPosition({
+                x: canvasPosition.x * scaleX,
+                y: canvasPosition.y * scaleY,
+              });
             } catch (error) {
               console.error(
                 "Error converting PDF coordinates to canvas:",
@@ -199,6 +233,7 @@ export default function Step3AddSignature({
               );
               // Set default position if conversion fails
               setSignaturePosition({ x: 0, y: 0, page: 1 });
+              setVisualPosition({ x: 0, y: 0 });
             }
           }
         }
@@ -211,19 +246,38 @@ export default function Step3AddSignature({
     if (!containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const clampedPosition = clampPosition(
-      { x, y },
-      containerRect.width,
-      containerRect.height,
-      SIGNATURE_IMAGE_WIDTH,
-      SIGNATURE_IMAGE_HEIGHT
-    );
+    const canvas = containerRef.current.querySelector(
+      "canvas"
+    ) as HTMLCanvasElement | null;
 
-    setSignaturePosition({
-      x: clampedPosition.x,
-      y: clampedPosition.y,
-      page: 1,
-    });
+    if (canvas) {
+      // Calculate scale factor from visual space to canvas pixel space
+      const scaleX = canvas.width / canvas.getBoundingClientRect().width;
+      const scaleY = canvas.height / canvas.getBoundingClientRect().height;
+
+      // Clamp position in visual space
+      const clampedPosition = clampPosition(
+        { x, y },
+        containerRect.width,
+        containerRect.height,
+        SIGNATURE_IMAGE_WIDTH,
+        SIGNATURE_IMAGE_HEIGHT
+      );
+
+      // Scale from visual space to canvas pixel space
+      const scaledPosition = {
+        x: clampedPosition.x * scaleX,
+        y: clampedPosition.y * scaleY,
+      };
+
+      // Store both visual position (for display) and canvas pixel position (for PDF)
+      setVisualPosition(clampedPosition);
+      setSignaturePosition({
+        x: scaledPosition.x,
+        y: scaledPosition.y,
+        page: 1,
+      });
+    }
   };
 
   // Clear form
@@ -267,6 +321,8 @@ export default function Step3AddSignature({
           signaturePosition: {
             x: pdfPosition.x, // PDF coordinates for embedding
             y: pdfPosition.y, // PDF coordinates for embedding
+            width: pdfPosition.width, // PDF width for embedding
+            height: pdfPosition.height, // PDF height for embedding
             page: signaturePosition.page,
           },
           canvasPosition: {
@@ -326,8 +382,8 @@ export default function Step3AddSignature({
         position: {
           x: pdfPosition.x,
           y: pdfPosition.y,
-          width: SIGNATURE_IMAGE_WIDTH,
-          height: SIGNATURE_IMAGE_HEIGHT,
+          width: pdfPosition.width,
+          height: pdfPosition.height,
         },
       });
 
@@ -488,7 +544,7 @@ export default function Step3AddSignature({
       <PdfPreviewPanel
         documentPdf={documentPdf}
         signatureImage={signatureImage}
-        signaturePosition={signaturePosition}
+        signaturePosition={visualPosition}
         onSignatureDrag={handleSignatureDrag}
         containerRef={containerRef}
         onPdfScaleChange={setPdfScale}

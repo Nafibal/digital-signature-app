@@ -68,6 +68,7 @@ export function convertCanvasToPdfCoordinates(
 ): PdfPosition {
   const canvasHeight = canvas.height;
   const canvasWidth = canvas.width;
+
   // Convert canvas coordinates to PDF coordinates
   const pdfX = canvasPosition.x / scale;
   const pdfY =
@@ -75,9 +76,9 @@ export function convertCanvasToPdfCoordinates(
     canvasPosition.y / scale -
     signatureSize.height / scale;
 
-  // ✅ FIX: Scale signature dimensions by scale factor to match canvas display size
-  const pdfWidth = signatureSize.width * scale;
-  const pdfHeight = signatureSize.height * scale;
+  const pdfWidth = 400 / scale;
+  const pdfHeight = 150 / scale;
+
   return {
     x: pdfX,
     y: pdfY,

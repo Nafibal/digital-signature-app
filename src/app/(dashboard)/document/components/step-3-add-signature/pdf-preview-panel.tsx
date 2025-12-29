@@ -140,7 +140,7 @@ export default function PdfPreviewPanel({
         {signatureImage && (
           <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
             <p className="text-sm text-neutral-600">
-              <span className="font-medium">Position:</span> X:{" "}
+              <span className="font-medium">Visual Position:</span> X:{" "}
               {Math.round(signaturePosition.x)}, Y:{" "}
               {Math.round(signaturePosition.y)}, Page: {signaturePosition.page}
             </p>

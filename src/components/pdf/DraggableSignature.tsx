@@ -2,6 +2,7 @@
 
 import { useState, useEffect, RefObject } from "react";
 import { CanvasPosition } from "@/lib/utils/coordinates";
+import Image from "next/image";
 
 interface DraggableSignatureProps {
   signatureImage: string;
@@ -84,11 +85,13 @@ export default function DraggableSignature({
         height: `${height}px`,
       }}
     >
-      <img
+      <Image
         src={signatureImage}
         alt="Signature"
         className="w-full h-full object-contain"
         draggable={false}
+        width={width}
+        height={height}
       />
     </div>
   );
