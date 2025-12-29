@@ -22,6 +22,8 @@ interface PdfPreviewPanelProps {
   onSignatureDrag: (x: number, y: number) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   onPdfScaleChange?: (scale: number) => void;
+  signatureDisplayWidth?: number;
+  signatureDisplayHeight?: number;
 }
 
 export default function PdfPreviewPanel({
@@ -31,6 +33,8 @@ export default function PdfPreviewPanel({
   onSignatureDrag,
   containerRef,
   onPdfScaleChange,
+  signatureDisplayWidth,
+  signatureDisplayHeight,
 }: PdfPreviewPanelProps) {
   // Local canvas ref and state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -123,14 +127,11 @@ export default function PdfPreviewPanel({
               {signatureImage && (
                 <DraggableSignature
                   signatureImage={signatureImage}
-                  position={{
-                    x: signaturePosition.x,
-                    y: signaturePosition.y,
-                  }}
+                  position={signaturePosition}
                   onDrag={onSignatureDrag}
                   containerRef={containerRef}
-                  width={SIGNATURE_IMAGE_WIDTH}
-                  height={SIGNATURE_IMAGE_HEIGHT}
+                  width={signatureDisplayWidth ?? SIGNATURE_IMAGE_WIDTH}
+                  height={signatureDisplayHeight ?? SIGNATURE_IMAGE_HEIGHT}
                 />
               )}
             </>
@@ -142,7 +143,7 @@ export default function PdfPreviewPanel({
             <p className="text-sm text-neutral-600">
               <span className="font-medium">Visual Position:</span> X:{" "}
               {Math.round(signaturePosition.x)}, Y:{" "}
-              {Math.round(signaturePosition.y)}, Page: {signaturePosition.page}
+              {Math.round(signaturePosition.y)}
             </p>
           </div>
         )}

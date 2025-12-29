@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, RefObject } from "react";
-import { CanvasPosition } from "@/lib/utils/coordinates";
+import { SignaturePosition } from "@/lib/types/document";
 import Image from "next/image";
 
 interface DraggableSignatureProps {
   signatureImage: string;
-  position: CanvasPosition;
+  position: SignaturePosition;
   onDrag: (x: number, y: number) => void;
   containerRef: RefObject<HTMLDivElement | null>;
   width?: number;

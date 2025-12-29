@@ -88,6 +88,7 @@ export default function Step3AddSignature({
     x: 0,
     y: 0,
   });
+  const [visualPage, setVisualPage] = useState<number>(1);
 
   // Refs
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -272,6 +273,7 @@ export default function Step3AddSignature({
 
       // Store both visual position (for display) and canvas pixel position (for PDF)
       setVisualPosition(clampedPosition);
+      setVisualPage(1);
       setSignaturePosition({
         x: scaledPosition.x,
         y: scaledPosition.y,
@@ -548,6 +550,8 @@ export default function Step3AddSignature({
         onSignatureDrag={handleSignatureDrag}
         containerRef={containerRef}
         onPdfScaleChange={setPdfScale}
+        signatureDisplayWidth={SIGNATURE_IMAGE_WIDTH / pdfScale}
+        signatureDisplayHeight={SIGNATURE_IMAGE_HEIGHT / pdfScale}
       />
     </div>
   );
