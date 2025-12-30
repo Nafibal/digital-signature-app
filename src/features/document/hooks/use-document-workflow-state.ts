@@ -40,7 +40,7 @@ export function useDocumentWorkflowState({
     subStep: 1,
 
     // Document data
-    createdDocumentId: null, // Always start as null, separate from initialDocumentId for edit mode
+    createdDocumentId: initialDocumentId || null, // Use initialDocumentId when editing existing document
     documentDataFetched: null,
 
     // Step 1 state
@@ -159,6 +159,14 @@ export function useDocumentWorkflowState({
       createdDocumentId: id,
     }));
   }, []);
+
+  // Initialize createdDocumentId from initialDocumentId when editing existing document
+  // This ensures state is properly synced for edit mode
+  useEffect(() => {
+    if (initialDocumentId && !createdDocumentId) {
+      setCreatedDocumentId(initialDocumentId);
+    }
+  }, [initialDocumentId]);
 
   return {
     state,

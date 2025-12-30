@@ -5,17 +5,21 @@ import { Step3aFormData } from "@/features/document/types";
 import { RichTextEditorRef } from "./editor/RichTextEditor";
 import EditorPanel from "./step-3-fill-content/EditorPanel";
 import PreviewPanel from "./step-3-fill-content/PreviewPanel";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
 
 interface Step3FillContentProps {
   content: Step3aFormData;
   setContent: React.Dispatch<React.SetStateAction<Step3aFormData>>;
   documentId: string | null;
+  pdfGenerationError: string | null;
 }
 
 export default function Step3FillContent({
   content,
   setContent,
   documentId,
+  pdfGenerationError,
 }: Step3FillContentProps) {
   const editorRef = useRef<RichTextEditorRef>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -81,19 +85,40 @@ export default function Step3FillContent({
   }, [previewUrl]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <EditorPanel
-        editorRef={editorRef}
-        content={content}
-        onEditorUpdate={handleEditorUpdate}
-      />
-      <PreviewPanel
-        previewUrl={previewUrl}
-        isGeneratingPreview={isGeneratingPreview}
-        previewError={previewError}
-        onPreview={handlePreview}
-        documentId={documentId}
-      />
+    <div className="space-y-6">
+      {/* PDF Generation Error Display */}
+      {pdfGenerationError && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="flex items-start gap-3 p-4">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-900">
+                PDF Generation Failed
+              </h3>
+              <p className="text-sm text-red-700 mt-1">{pdfGenerationError}</p>
+              <p className="text-sm text-red-600 mt-2">
+                You can still proceed to the signature step, but you may need to
+                regenerate the PDF before signing.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <EditorPanel
+          editorRef={editorRef}
+          content={content}
+          onEditorUpdate={handleEditorUpdate}
+        />
+        <PreviewPanel
+          previewUrl={previewUrl}
+          isGeneratingPreview={isGeneratingPreview}
+          previewError={previewError}
+          onPreview={handlePreview}
+          documentId={documentId}
+        />
+      </div>
     </div>
   );
 }

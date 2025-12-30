@@ -155,7 +155,7 @@ export default function PdfPreviewPanel({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm font-medium min-w-[80px] text-center">
+              <span className="text-sm font-medium min-w-20 text-center">
                 Page {localCurrentPage} of {totalPages}
               </span>
               <Button
@@ -174,7 +174,7 @@ export default function PdfPreviewPanel({
         <div
           ref={containerRef}
           data-signature-container="true"
-          className="relative min-h-[600px] rounded-lg border border-neutral-200 bg-white"
+          className="relative min-h-150 rounded-lg border border-neutral-200 bg-white"
         >
           {isPdfLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white z-10">

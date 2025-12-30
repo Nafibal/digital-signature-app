@@ -460,6 +460,7 @@ export default function DocumentWorkflowClient({
                   content={content}
                   setContent={setContentWrapper}
                   documentId={effectiveDocumentId!}
+                  pdfGenerationError={state.pdfGenerationError}
                 />
               )}
             </>

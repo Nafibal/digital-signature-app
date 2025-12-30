@@ -252,10 +252,9 @@ async function handleStep3(
         deps.updateState({ isGeneratingPdf: false });
       }
 
-      // Only proceed to sub-step 2 if PDF generation succeeded
-      if (pdfGenerationSucceeded) {
-        deps.updateState({ subStep: 2 });
-      }
+      // Allow proceeding to step 3.2 even if PDF generation fails
+      // The user can retry PDF generation in step 3.2
+      deps.updateState({ subStep: 2 });
     }
   } else {
     // Sub-step 2: Navigate to step 4

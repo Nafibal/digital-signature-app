@@ -115,8 +115,8 @@ export async function GET(
       );
     }
 
-    // Return current content
-    return NextResponse.json({ content }, { status: 200 });
+    // Return current content directly (not wrapped in { content } object)
+    return NextResponse.json(content, { status: 200 });
   } catch (error) {
     console.error("[GET /api/documents/[id]/content]", error);
     return NextResponse.json(
