@@ -116,7 +116,6 @@ model Document {
   // Relations
   owner         User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   contents      DocumentContent[]
-  drafts        DocumentDraft[]
   signatures    Signature[]
   currentContent DocumentContent?  @relation("DocumentCurrentContent", fields: [currentContentId], references: [id])
   currentPdf    DocumentPdf?       @relation("DocumentCurrentPdf", fields: [currentPdfId], references: [id])
@@ -179,24 +178,6 @@ model DocumentPdf {
   @@map("document_pdfs")
 }
 
-///////////////////////////////////////////////////////////
-// PDF & DRAFTS
-///////////////////////////////////////////////////////////
-
-model DocumentDraft {
-  id          String   @id @default(uuid()) @db.Uuid
-  documentId  String   @db.Uuid @map("document_id")
-  pdfPath     String   @map("pdf_path")
-  version     Int
-  templateId  String?  @map("template_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  // Relations
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-
-  @@unique([documentId, version])
-  @@map("document_drafts")
-}
 
 ///////////////////////////////////////////////////////////
 // SIGNATURES
