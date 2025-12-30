@@ -6,8 +6,8 @@
 
 import { chromium } from "playwright";
 import { prisma } from "../db";
-import { uploadPDF } from "@/lib/helpers";
-import { supabase } from "../storage";
+import { uploadPDF } from "../storage/upload";
+import { supabase } from "../storage/supabase";
 import { createDocumentPdf } from "../mutations/documents";
 
 /**

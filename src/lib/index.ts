@@ -1,5 +1,5 @@
 export { cn } from "./utils";
-export { uploadPDF, getPublicUrl, deleteFile } from "./helpers";
+// Note: Storage utilities (uploadPDF, getPublicUrl, deleteFile) have been moved to @/server/storage/upload.ts
 export {
   convertCanvasToPdfCoordinates,
   convertPdfToCanvasCoordinates,

@@ -1,7 +1,7 @@
 import { auth } from "@/server/auth/config";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { uploadPDF } from "@/lib/helpers";
+import { uploadPDF } from "@/server/storage/upload";
 
 export async function POST(req: Request) {
   try {
