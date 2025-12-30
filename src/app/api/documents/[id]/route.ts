@@ -5,6 +5,7 @@ import {
   getDocumentByIdForUser,
   updateDocumentForUser,
 } from "@/server/services";
+import { isValidUuid } from "@/lib/utils/uuid";
 
 export async function GET(
   req: Request,
@@ -21,6 +22,14 @@ export async function GET(
     }
 
     const documentId = (await params).id;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
 
     // Get document using service layer
     const document = await getDocumentByIdForUser(documentId, session.user.id);
@@ -59,6 +68,15 @@ export async function PATCH(
     }
 
     const documentId = (await params).id;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json();
 
     // Update document using service layer

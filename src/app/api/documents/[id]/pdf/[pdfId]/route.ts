@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getDocumentPdfById } from "@/server/queries/documents";
 import { supabase } from "@/server/storage/supabase";
+import { isValidUuid } from "@/lib/utils/uuid";
 
 // GET /api/documents/[id]/pdf/[pdfId]
 // Proxy endpoint to serve PDF from Supabase Storage
@@ -21,6 +22,22 @@ export async function GET(
     }
 
     const { id: documentId, pdfId } = await params;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
+
+    // Validate pdfId is a valid UUID
+    if (!isValidUuid(pdfId)) {
+      return NextResponse.json(
+        { message: "Invalid PDF ID format" },
+        { status: 400 }
+      );
+    }
 
     // Fetch document PDF using query layer
     const documentPdf = await getDocumentPdfById(

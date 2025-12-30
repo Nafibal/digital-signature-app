@@ -353,14 +353,14 @@ export default function DocumentWorkflowClient({
   }, [updateStep]);
 
   const handleSaveDraft = useCallback(async () => {
-    if (!state.createdDocumentId) return;
+    if (!effectiveDocumentId) return;
 
     updateState({ isSaving: true, saveStatus: "saving" });
 
     try {
       // Save content with current HTML
       await saveContent({
-        documentId: state.createdDocumentId,
+        documentId: effectiveDocumentId,
         htmlContent: state.content.html,
       });
 
@@ -446,7 +446,7 @@ export default function DocumentWorkflowClient({
               setUploadMode={setUploadModeWrapper}
               uploadedFile={uploadedFile}
               setUploadedFile={setUploadedFileWrapper}
-              documentId={createdDocumentId}
+              documentId={effectiveDocumentId!}
               onNext={() => handleNext()}
             />
           )}
@@ -459,7 +459,7 @@ export default function DocumentWorkflowClient({
                 <Step3FillContent
                   content={content}
                   setContent={setContentWrapper}
-                  documentId={createdDocumentId}
+                  documentId={effectiveDocumentId!}
                 />
               )}
             </>
@@ -467,7 +467,7 @@ export default function DocumentWorkflowClient({
 
           {currentStep === 3 && subStep === 2 && (
             <Step3AddSignature
-              documentId={createdDocumentId!}
+              documentId={effectiveDocumentId!}
               documentPdf={documentPdf}
               signatureImage={signatureImage}
               setSignatureImage={setSignatureImageWrapper}

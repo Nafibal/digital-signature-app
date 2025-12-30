@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { supabase } from "@/server/storage/supabase";
 import { saveSignature, getDocumentSignaturesForUser } from "@/server/services";
+import { isValidUuid } from "@/lib/utils/uuid";
 
 // POST /api/documents/[id]/signature
 // Save signature metadata and image
@@ -21,6 +22,15 @@ export async function POST(
     }
 
     const documentId = (await params).id;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json();
 
     // Validate required fields
@@ -35,6 +45,14 @@ export async function POST(
     if (!documentPdfId) {
       return NextResponse.json(
         { message: "documentPdfId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate documentPdfId is a valid UUID
+    if (!isValidUuid(documentPdfId)) {
+      return NextResponse.json(
+        { message: "Invalid document PDF ID format" },
         { status: 400 }
       );
     }
@@ -109,6 +127,14 @@ export async function GET(
     }
 
     const documentId = (await params).id;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
 
     // Get signatures using service layer
     const signatures = await getDocumentSignaturesForUser(

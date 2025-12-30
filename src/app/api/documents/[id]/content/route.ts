@@ -5,6 +5,7 @@ import {
   saveDocumentContent,
   getDocumentContentForUser,
 } from "@/server/services";
+import { isValidUuid } from "@/lib/utils/uuid";
 
 // POST /api/documents/[id]/content
 // Create or update document content
@@ -23,6 +24,15 @@ export async function POST(
     }
 
     const documentId = (await params).id;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json();
 
     // Extract HTML content from body (handle both string and object formats)
@@ -83,6 +93,14 @@ export async function GET(
     }
 
     const documentId = (await params).id;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
 
     // Get document content using service layer
     const content = await getDocumentContentForUser(

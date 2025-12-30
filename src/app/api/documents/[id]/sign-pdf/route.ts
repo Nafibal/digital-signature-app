@@ -2,6 +2,7 @@ import { auth } from "@/server/auth/config";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { signPdf as signPdfService } from "@/server/services";
+import { isValidUuid } from "@/lib/utils/uuid";
 
 // POST /api/documents/[id]/sign-pdf
 // Embed signature into PDF and upload signed version
@@ -20,6 +21,15 @@ export async function POST(
     }
 
     const documentId = (await params).id;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json();
 
     // Validate required fields

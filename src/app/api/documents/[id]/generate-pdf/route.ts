@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getDocumentWithContent } from "@/server/queries/documents";
 import { generatePdfFromHtml, setCurrentPdf } from "@/server/services";
+import { isValidUuid } from "@/lib/utils/uuid";
 
 // Must use Node.js runtime for Playwright
 export const runtime = "nodejs";
@@ -24,6 +25,14 @@ export async function POST(
     }
 
     const documentId = (await params).id;
+
+    // Validate documentId is a valid UUID
+    if (!isValidUuid(documentId)) {
+      return NextResponse.json(
+        { message: "Invalid document ID format" },
+        { status: 400 }
+      );
+    }
 
     // Get document with HTML content
     const document = await getDocumentWithContent(documentId, session.user.id);
