@@ -20,23 +20,27 @@ Digital Signature App is a web-based document workflow system that enables users
 ## Tech Stack
 
 - Frontend:
-  - Next.js 15
+  - Next.js 15.5 (App Router)
+  - React 19.1
   - TypeScript
-  - React Hook Form
-  - TanStack Query
+  - Tailwind CSS 4
+  - React Hook Form 7
+  - TanStack Query 5
+  - TipTap 3 (Rich text editor)
 - Backend:
-  - Next.js Route Handlers (API Routes)
-  - Better Auth
+  - Next.js API Routes (Route Handlers)
+  - Better Auth 1.4
+  - Prisma ORM 7
 - Database:
-  - PostgreSQL
-  - Prisma ORM
+  - PostgreSQL (via Supabase)
 - Infrastructure:
   - Node.js runtime
   - Server-side PDF processing
 - Third-party services:
-  - PDF.js (pdfjs-dist) for PDF preview
+  - PDF.js 5 (pdfjs-dist) for PDF preview
   - pdf-lib for PDF manipulation and signature embedding
-  - Playwright for PDF generation and end-to-end testing
+  - Supabase Storage for file storage
+  - Playwright for end-to-end testing
 
 ## Core Value Proposition
 
@@ -49,8 +53,5 @@ The application combines a guided multi-step workflow with real-time PDF preview
 - Architecture → 03-architecture.md
 - Database → 04-database.md
 - API → 05-api.md
-- UX → 06-ux.md
 - Testing → 07-testing.md
-- Deployment → 08-deployment.md
-- Decisions → 09-decisions.md
-
+- Library → 08-library.md
