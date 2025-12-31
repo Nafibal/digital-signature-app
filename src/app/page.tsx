@@ -15,7 +15,7 @@ import {
   Link2,
 } from "lucide-react";
 import NavigationBar from "@/components/navigation/NavigationBar";
-import { auth } from "@/lib/auth";
+import { auth } from "@/server/auth";
 import { headers } from "next/headers";
 
 export default async function LandingPage() {
