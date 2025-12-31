@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Command, FileSignature, LayoutDashboard, User } from "lucide-react";
+import { FileSignature, LayoutDashboard, User } from "lucide-react";
 
 import { NavMain } from "@/components/navigation/NavMain";
 import { NavUser } from "@/components/navigation/NavUser";
@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
-import { signOut } from "@/lib/actions/auth-actions";
+import { signOut } from "@/features/auth";
 
 type User = {
   id: string;
